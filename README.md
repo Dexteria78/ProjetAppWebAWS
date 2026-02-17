@@ -52,8 +52,16 @@ Architecture simple avec tous les composants sur une seule instance EC2 :
 - ⚠️ Pas de haute disponibilité
 - ⚠️ Scaling vertical uniquement
 
+### Vidéos de démonstration Phase 1
+
+📹 **MyDrive** : https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing
+
+- **Vidéo 1** : Destruction de l'ancienne infrastructure
+- **Vidéo 2** : Déploiement et test avec ajout d'un étudiant
+- **Vidéo 3** : Explication détaillée des fichiers de configuration
+
 ### URL de l'application Phase 1
-http://34.227.225.16 (déploiement initial)
+http://34.227.225.16
 
 ---
 
@@ -63,10 +71,7 @@ http://34.227.225.16 (déploiement initial)
 
 Évolution vers une architecture découplée avec séparation de la base de données :
 - **VPC** : Même réseau 10.0.0.0/16
-- **3 sous-réseaux** :
-  - 1 public (10.0.1.0/24) pour le serveur web
-  - 2 privés (10.0.2.0/24, 10.0.3.0/24) pour RDS dans 2 AZ différentes
-- **Internet Gateway** : Inchangé
+- **3 sous-réseaux** : 1 public + 2 privés dans 2 AZ différentes
 - **EC2 t2.micro** : Serveur web uniquement (plus de MySQL local)
 - **RDS MySQL 8.0** : Base de données managée (db.t3.micro, 20GB gp3)
 - **AWS Secrets Manager** : Stockage sécurisé des credentials
@@ -77,73 +82,42 @@ http://34.227.225.16 (déploiement initial)
 
 | Fichier | Changements |
 |---------|-------------|
-| **variables.tf** | ➕ `private_subnet_1_cidr`, `private_subnet_2_cidr`, `availability_zone_2`, `db_name`, `db_username`, `db_instance_class`, `db_allocated_storage` |
-| **network.tf** | ➕ 2 sous-réseaux privés (`aws_subnet.private_1`, `aws_subnet.private_2`) sans IPs publiques |
-| **security.tf** | 🔄 Security group web (retrait de MySQL:3306)<br>➕ Security group RDS (MySQL:3306 depuis web et Cloud9 uniquement)<br>➕ Security group Cloud9 (egress only) |
-| **compute.tf** | 🔄 Ajout de `iam_instance_profile` (LabInstanceProfile pour AWS Academy)<br>🔄 Ajout de `depends_on` (RDS et Secrets Manager)<br>🔄 Tags incluent `Phase = "2"` |
-| **userdata.sh** | 🔄 Retrait installation mysql-server<br>➕ Installation mysql-client, jq, awscli<br>🔄 Récupération credentials depuis Secrets Manager<br>🔄 Connexion à RDS distant (pas localhost)<br>➕ Configuration systemd pour démarrage automatique |
-| **outputs.tf** | ➕ `private_subnet_1_id`, `private_subnet_2_id`, `rds_endpoint`, `rds_address`, `secrets_manager_arn`, `secrets_manager_name`, `cloud9_environment_id`, `cloud9_url` |
+| **variables.tf** | ➕ 7 nouvelles variables pour RDS et sous-réseaux privés |
+| **network.tf** | ➕ 2 sous-réseaux privés dans us-east-1a et us-east-1b |
+| **security.tf** | 🔄 3 security groups au lieu de 1 (web, RDS, Cloud9) |
+| **compute.tf** | 🔄 Ajout IAM instance profile + depends_on RDS |
+| **userdata.sh** | 🔄 Connexion RDS + récupération credentials depuis Secrets Manager |
+| **outputs.tf** | ➕ Outputs RDS, Secrets Manager et Cloud9 |
 
 ### Nouveaux fichiers Phase 2
 
 | Fichier | Description |
 |---------|-------------|
-| **database.tf** | `random_password` (16 caractères), `aws_db_subnet_group` (2 sous-réseaux requis), `aws_db_instance` (MySQL 8.0, non public, single-AZ pour coûts) |
-| **secrets.tf** | `aws_secretsmanager_secret` (student-records-app-db-credentials-phase2), `aws_secretsmanager_secret_version` (JSON avec username, password, host, port, dbname), référence LabInstanceProfile |
-| **app-secret.tf** | **Secret spécifique pour l'application** : `Mydbsecret` (nom exact attendu par le code Node.js), structure JSON avec clés `user`, `password`, `host`, `db` (différent du secret documentation) |
-| **cloud9.tf** | `aws_cloud9_environment_ec2` (t3.small, Amazon Linux 2023, auto-stop 30min, dans sous-réseau public) |
+| **database.tf** | Random password, DB subnet group, RDS MySQL instance |
+| **secrets.tf** | Secret documentation avec username/password/host/port/dbname |
+| **app-secret.tf** | Secret "Mydbsecret" avec structure attendue par l'application (user/password/host/db) |
+| **cloud9.tf** | Environnement Cloud9 t3.small pour migration |
 
-### Évolution de l'architecture
+### Caractéristiques Phase 2
 
-#### Base de données
-- **Phase 1** : MySQL installé localement sur EC2 avec userdata
-- **Phase 2** : RDS MySQL 8.0 managé dans sous-réseaux privés
+- ✅ Base de données managée RDS avec backups automatiques
+- ✅ Credentials sécurisés dans Secrets Manager
+- ✅ Isolation réseau (RDS dans sous-réseaux privés)
+- ✅ Multi-AZ capable pour haute disponibilité
+- ✅ Security groups granulaires
+- ⚠️ Temps de déploiement plus long (~10 minutes)
+- ⚠️ Coûts plus élevés (~$15/mois vs ~$2/mois)
 
-#### Sécurité des credentials
-- **Phase 1** : Hardcodés dans userdata (`student12` visible en clair)
-- **Phase 2** : Générés aléatoirement et stockés dans Secrets Manager
+### Vidéos de démonstration Phase 2
 
-#### Réseau
-- **Phase 1** : 1 sous-réseau public (tout accessible depuis Internet)
-- **Phase 2** : 1 public + 2 privés (RDS isolé, accessible uniquement par web server)
+📹 **MyDrive** : https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing
 
-#### Security Groups
-- **Phase 1** : 1 SG unique pour tout
-- **Phase 2** : 3 SG distincts avec principe du moindre privilège
-
-#### IAM
-- **Phase 1** : Pas de rôle IAM
-- **Phase 2** : Instance profile pour accès sécurisé à Secrets Manager
-
-#### Haute disponibilité
-- **Phase 1** : Aucune (instance unique, DB locale)
-- **Phase 2** : RDS Multi-AZ capable (désactivé pour coûts mais infrastructure prête)
-
-#### Backups
-- **Phase 1** : Aucun (données perdues si instance détruite)
-- **Phase 2** : RDS automated backups (désactivé pour coûts mais configurable)
-
-### Point technique important - Secret "Mydbsecret"
-
-L'application Node.js cherche un secret nommé **exactement** `Mydbsecret` avec cette structure :
-```json
-{
-  "user": "admin",
-  "password": "generated_password",
-  "host": "rds-endpoint.amazonaws.com",
-  "db": "STUDENTS"
-}
-```
-
-C'est pourquoi nous avons créé `app-secret.tf` en plus de `secrets.tf`. Le premier est pour l'application, le second pour la documentation et traçabilité.
+- **Vidéo 1** : Destruction de Phase 2 (si nécessaire)
+- **Vidéo 2** : Déploiement Phase 2 et tests avec RDS
+- **Vidéo 3** : Explication des fichiers et architecture découplée
 
 ### URL de l'application Phase 2
 http://35.175.184.177
-
-### Temps de déploiement Phase 2
-- **RDS** : ~5-8 minutes (création de l'instance managée)
-- **EC2 + userdata** : ~2-3 minutes
-- **Total** : ~10 minutes
 
 ---
 
@@ -367,22 +341,42 @@ student-records-app-capstone/
 - Launch Template
 - Tests de charge avec loadtest
 
+📹 **MyDrive** : https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing
+- **Vidéo 1** : Destruction de Phase 3 (si nécessaire)
+- **Vidéo 2** : Déploiement Phase 3 et tests de charge
+- **Vidéo 3** : Explication Load Balancer et Auto Scaling
+
 ### Phase 4 - Conteneurisation
 - Dockerfile pour l'application Node.js
 - Amazon ECR (Elastic Container Registry)
 - Push/Pull d'images
 - Déploiement conteneurisé
 
+📹 **MyDrive** : https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing
+- **Vidéo 1** : Destruction de Phase 4 (si nécessaire)
+- **Vidéo 2** : Build et déploiement avec Docker
+- **Vidéo 3** : Explication Dockerfile et ECR
+
 ### Phase 5 - CI/CD
 - Pipeline automatisé (GitHub Actions / AWS CodePipeline)
 - Build → Test → Package → Deploy
 - Tests de charge automatiques
+
+📹 **MyDrive** : https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing
+- **Vidéo 1** : Destruction de Phase 5 (si nécessaire)
+- **Vidéo 2** : Configuration et exécution du pipeline
+- **Vidéo 3** : Explication CI/CD et automatisation
 
 ### Phase 6 - Orchestration
 - Amazon ECS ou EKS
 - Gestion de plusieurs conteneurs
 - Rolling updates
 - Health checks avancés
+
+📹 **MyDrive** : https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing
+- **Vidéo 1** : Destruction de Phase 6 (si nécessaire)
+- **Vidéo 2** : Déploiement ECS/EKS
+- **Vidéo 3** : Explication orchestration de conteneurs
 
 ### Phase 7 - Améliorations
 - CloudWatch monitoring & alarms
@@ -391,23 +385,22 @@ student-records-app-capstone/
 - Multi-région pour disaster recovery
 - Authentification (Cognito)
 
+📹 **MyDrive** : https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing
+- **Vidéo 1** : Destruction de Phase 7 (si nécessaire)
+- **Vidéo 2** : Déploiement des améliorations
+- **Vidéo 3** : Explication optimisations et best practices
+
 ---
 
 ## Vidéos de démonstration
 
-Toutes les vidéos de déploiement et tests sont disponibles sur MyDrive :
+📹 **Toutes les vidéos sont disponibles sur MyDrive** :
 https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing
 
-**Contenu des vidéos Phase 1** :
-- Vidéo 1 : Destruction de l'ancienne infrastructure
-- Vidéo 2 : Déploiement et test avec ajout d'étudiant
-- Vidéo 3 : Explication des fichiers de configuration
-
-**Contenu des vidéos Phase 2** (à venir) :
-- Déploiement avec RDS
-- Configuration Secrets Manager
-- Tests de persistance des données
-- Utilisation de Cloud9
+Chaque phase comprend 3 vidéos :
+- **Vidéo 1** : Destruction de l'infrastructure précédente (si nécessaire)
+- **Vidéo 2** : Déploiement et tests de la phase
+- **Vidéo 3** : Explication détaillée des fichiers et de l'architecture
 
 ---
 
