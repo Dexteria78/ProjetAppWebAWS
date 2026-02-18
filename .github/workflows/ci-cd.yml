@@ -196,7 +196,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: ./phase4/terraform
-        run: terraform init
+        run: terraform init -reconfigure
 
       - name: Terraform Plan
         working-directory: ./phase4/terraform

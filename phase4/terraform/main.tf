@@ -8,6 +8,13 @@ terraform {
     }
   }
   required_version = ">= 1.0"
+  
+  # Backend S3 pour partager le state entre GitHub Actions et local
+  backend "s3" {
+    bucket = "student-records-terraform-state-1771428261"
+    key    = "phase4/terraform.tfstate"
+    region = "us-east-1"
+  }
 }
 
 provider "aws" {
@@ -45,6 +52,11 @@ resource "aws_ecr_repository" "student_records_app" {
     Phase       = "4"
     Environment = "production"
   }
+
+  lifecycle {
+    create_before_destroy = false
+    prevent_destroy       = false
+  }
 }
 
 # Lifecycle policy pour ECR (garder seulement les 10 dernières images)
@@ -72,6 +84,10 @@ resource "aws_security_group" "docker_instance" {
   name        = "student-records-docker-instance-sg"
   description = "Security group for Docker instance running student records app"
   vpc_id      = data.aws_vpc.default.id
+
+  lifecycle {
+    create_before_destroy = false
+  }
 
   # SSH
   ingress {
