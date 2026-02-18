@@ -1,0 +1,47 @@
+# Dépendances Node.js (seront installées dans le conteneur)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Fichiers de développement
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Fichiers de build
+dist/
+build/
+*.log
+
+# Fichiers de test
+test/
+tests/
+*.test.js
+*.spec.js
+
+# Documentation
+README.md
+docs/
+
+# Environnement
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars
+
+# Archives
+*.zip
+*.tar.gz
+code.zip

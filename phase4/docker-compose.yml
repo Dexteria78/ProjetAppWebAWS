@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Base de données MySQL pour test local
+  mysql:
+    image: mysql:8.0
+    container_name: student-records-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: STUDENTS
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: adminpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - student-network
+
+  # Application web
+  app:
+    build: .
+    container_name: student-records-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      APP_DB_HOST: mysql
+      APP_DB_USER: admin
+      APP_DB_PASSWORD: adminpassword
+      APP_DB_NAME: STUDENTS
+      APP_PORT: 80
+    ports:
+      - "80:80"
+    networks:
+      - student-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  student-network:
+    driver: bridge
