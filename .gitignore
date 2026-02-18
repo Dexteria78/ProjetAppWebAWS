@@ -7,5 +7,5 @@
 # Archives
 **/*.zip
 
-# Resources downloaded
-**/resources/
+# Node modules (but keep source code)
+**/node_modules/
