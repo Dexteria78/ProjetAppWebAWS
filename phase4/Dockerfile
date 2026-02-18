@@ -16,8 +16,8 @@ FROM base AS dependencies
 # Copier les fichiers de dépendances
 COPY resources/codebase_partner/package*.json ./
 
-# Installer les dépendances de production uniquement
-RUN npm ci --only=production --quiet
+# Installer toutes les dépendances (production + dev car certaines sont nécessaires au runtime)
+RUN npm ci --quiet
 
 # Phase 2: Build final
 FROM base AS release
