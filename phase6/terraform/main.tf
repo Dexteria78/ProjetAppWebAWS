@@ -6,6 +6,13 @@ terraform {
       version = "~> 5.0"
     }
   }
+  
+  # Backend S3 pour partager le state (Phase 6 séparé de Phase 4/5)
+  backend "s3" {
+    bucket = "student-records-terraform-state-1771428261"
+    key    = "phase6/terraform.tfstate"
+    region = "us-east-1"
+  }
 }
 
 provider "aws" {

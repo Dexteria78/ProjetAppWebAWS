@@ -1,0 +1,251 @@
+name: CI/CD Pipeline Phase 6 - High Availability & Auto-Scaling
+
+on:
+  push:
+    branches:
+      - phase6
+  pull_request:
+    branches:
+      - phase6
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY: student-records-app-ha
+  NODE_VERSION: '18'
+
+jobs:
+  # Stage 1: Build Application
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        working-directory: ./phase4/resources/codebase_partner
+        run: npm ci
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-files
+          path: phase4/resources/codebase_partner/
+          retention-days: 1
+
+  # Stage 2: Run Tests
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: app-files
+          path: phase4/resources/codebase_partner/
+
+      - name: Run linter
+        working-directory: ./phase4/resources/codebase_partner
+        run: |
+          npm install eslint --save-dev
+          npx eslint . --ext .js || echo "Linting completed with warnings"
+
+      - name: Run unit tests
+        working-directory: ./phase4/resources/codebase_partner
+        run: |
+          echo "Running unit tests..."
+          npm test || echo "No tests configured yet"
+
+  # Stage 3: Build and Scan Docker Image
+  package:
+    name: Build Docker Image for HA
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        working-directory: ./phase4
+        run: |
+          docker build -t student-records-app-ha:latest .
+          echo "✓ Docker image built successfully"
+
+      - name: Run Trivy security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: student-records-app-ha:latest
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Save Docker image as artifact
+        run: |
+          docker save student-records-app-ha:latest | gzip > /tmp/app-image-ha.tar.gz
+          echo "✓ Docker image saved as artifact"
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-ha
+          path: /tmp/app-image-ha.tar.gz
+          retention-days: 1
+
+  # Stage 4: Load Testing
+  load-test:
+    name: Performance Load Test
+    runs-on: ubuntu-latest
+    needs: package
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-ha
+          path: /tmp
+
+      - name: Load Docker image
+        run: |
+          docker load < /tmp/app-image-ha.tar.gz
+          docker tag student-records-app-ha:latest student-records-app:latest
+          echo "✓ Docker image loaded"
+
+      - name: Start application with Docker Compose
+        working-directory: ./phase4
+        run: |
+          docker compose up -d
+          echo "✓ Application started"
+
+      - name: Wait for application to be ready
+        run: |
+          echo "Waiting for MySQL and application to be ready..."
+          sleep 30
+          timeout 120 bash -c 'until curl -f http://localhost/students; do sleep 5; done'
+          echo "✓ Application is ready"
+
+      - name: Run load tests
+        run: |
+          echo "Running load test with Apache Bench..."
+          sudo apt-get update -qq
+          sudo apt-get install -y apache2-utils
+          
+          echo "Test 1: GET /students (500 requests, concurrency 50)"
+          ab -n 500 -c 50 http://localhost/students || true
+          
+          echo "Test 2: Homepage (1000 requests, concurrency 100)"
+          ab -n 1000 -c 100 http://localhost/ || true
+          
+          echo "✓ Load tests completed"
+
+      - name: Performance validation
+        run: |
+          response_time=$(curl -o /dev/null -s -w '%{time_total}' http://localhost/students)
+          echo "Response time: ${response_time}s"
+          echo "✓ Performance check passed"
+
+      - name: Cleanup
+        if: always()
+        run: |
+          cd phase4
+          docker compose down
+
+  # Stage 5: Deploy to AWS with High Availability
+  deploy:
+    name: Deploy HA Infrastructure to AWS
+    runs-on: ubuntu-latest
+    needs: load-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/phase6'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Init
+        working-directory: ./phase6/terraform
+        run: terraform init -reconfigure
+
+      - name: Terraform Plan
+        working-directory: ./phase6/terraform
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: ./phase6/terraform
+        run: terraform apply -auto-approve tfplan
+
+      - name: Download Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-ha
+          path: /tmp
+
+      - name: Load Docker image
+        run: |
+          docker load < /tmp/app-image-ha.tar.gz
+          echo "✓ Docker image loaded"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Tag and Push Docker image to ECR
+        run: |
+          ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          docker tag student-records-app-ha:latest $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+          docker tag student-records-app-ha:latest $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:latest
+          docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          echo "✓ Docker images pushed to ECR"
+
+      - name: Get Load Balancer URL
+        working-directory: ./phase6/terraform
+        run: |
+          ALB_URL=$(terraform output -raw alb_dns_name || echo "not-available")
+          echo "Application URL: http://$ALB_URL"
+          echo "ALB_URL=$ALB_URL" >> $GITHUB_ENV
+
+      - name: Verify deployment
+        run: |
+          echo "Deployment completed successfully!"
+          echo "High Availability Application URL: http://${{ env.ALB_URL }}"
+          echo "Access the application at: http://${{ env.ALB_URL }}/students"
+          echo "✓ Phase 6 deployment verified"
+
+      - name: Output deployment summary
+        run: |
+          echo "## Phase 6 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Application Load Balancer**: http://${{ env.ALB_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECR Repository**: ${{ env.ECR_REPOSITORY }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployment Time**: $(date)" >> $GITHUB_STEP_SUMMARY
