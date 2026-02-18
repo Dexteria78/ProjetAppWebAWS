@@ -152,12 +152,13 @@ jobs:
         run: |
           cd phase4
           docker compose up -d
-          sleep 15
+          echo "Waiting for MySQL to be healthy..."
+          sleep 30
 
       - name: Wait for application to be ready
         run: |
           echo "Waiting for application to start..."
-          timeout 60 bash -c 'until curl -f http://localhost:3000/students 2>/dev/null; do sleep 2; done'
+          timeout 120 bash -c 'until curl -f http://localhost/students 2>/dev/null; do sleep 3; done'
           echo "✓ Application is ready"
 
       - name: Run basic load test
@@ -167,16 +168,16 @@ jobs:
           sudo apt-get install -y apache2-utils
           
           echo "Test 1: GET /students (100 requests, concurrency 10)"
-          ab -n 100 -c 10 http://localhost:3000/students || true
+          ab -n 100 -c 10 http://localhost/students || true
           
           echo "Test 2: Homepage (200 requests, concurrency 20)"
-          ab -n 200 -c 20 http://localhost:3000/ || true
+          ab -n 200 -c 20 http://localhost/ || true
           
           echo "✓ Load tests completed"
 
       - name: Performance validation
         run: |
-          response_time=$(curl -o /dev/null -s -w '%{time_total}' http://localhost:3000/students)
+          response_time=$(curl -o /dev/null -s -w '%{time_total}' http://localhost/students)
           echo "Response time: ${response_time}s"
           echo "✓ Performance check passed"
 
