@@ -352,3 +352,5 @@ Pour valider cette phase :
 <- Cloud9 environment for database Pipeline CI/CD activé le 2026-02-18 14:19:37 -->
 
 <- Cloud9 environment for database Infrastructure cleaned - ready for deployment 2026-02-18 15:58:22 -->
+
+<- Cloud9 environment for database ECR repository deleted - rerun 2026-02-18 16:10:28 -->
