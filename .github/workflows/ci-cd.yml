@@ -29,14 +29,14 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: resources/codebase_partner/package-lock.json
+          cache-dependency-path: phase4/resources/codebase_partner/package-lock.json
 
       - name: Install dependencies
-        working-directory: ./resources/codebase_partner
+        working-directory: ./phase4/resources/codebase_partner
         run: npm ci
 
       - name: Build application
-        working-directory: ./resources/codebase_partner
+        working-directory: ./phase4/resources/codebase_partner
         run: |
           echo "Application built successfully"
           ls -la
@@ -45,7 +45,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-build
-          path: resources/codebase_partner/
+          path: phase4/resources/codebase_partner/
           retention-days: 1
 
   # Stage 2: Test
@@ -66,26 +66,26 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: app-build
-          path: resources/codebase_partner/
+          path: phase4/resources/codebase_partner/
 
       - name: Install dependencies
-        working-directory: ./resources/codebase_partner
+        working-directory: ./phase4/resources/codebase_partner
         run: npm ci
 
       - name: Run linting
-        working-directory: ./resources/codebase_partner
+        working-directory: ./phase4/resources/codebase_partner
         run: |
           echo "Running ESLint..."
           npx eslint . --ext .js || echo "Linting completed with warnings"
 
       - name: Run unit tests
-        working-directory: ./resources/codebase_partner
+        working-directory: ./phase4/resources/codebase_partner
         run: |
           echo "Running tests..."
           npm test || echo "No tests found - skipping"
 
       - name: Code quality check
-        working-directory: ./resources/codebase_partner
+        working-directory: ./phase4/resources/codebase_partner
         run: |
           echo "Checking code quality..."
           echo "✓ Code quality checks passed"
