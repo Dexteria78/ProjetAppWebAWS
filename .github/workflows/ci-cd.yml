@@ -151,7 +151,7 @@ jobs:
       - name: Set up Docker Compose
         run: |
           cd phase4
-          docker-compose up -d
+          docker compose up -d
           sleep 15
 
       - name: Wait for application to be ready
@@ -184,7 +184,7 @@ jobs:
         if: always()
         run: |
           cd phase4
-          docker-compose down
+          docker compose down
 
   # Stage 5: Deploy to AWS
   deploy:
