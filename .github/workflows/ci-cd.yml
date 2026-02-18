@@ -28,8 +28,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: phase4/resources/codebase_partner/package-lock.json
 
       - name: Install dependencies
         working-directory: ./phase4/resources/codebase_partner
