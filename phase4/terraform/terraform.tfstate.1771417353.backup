@@ -1,0 +1,458 @@
+{
+  "version": 4,
+  "terraform_version": "1.14.5",
+  "serial": 35,
+  "lineage": "f0e9e984-87ff-7b01-8600-39e8379ad909",
+  "outputs": {},
+  "resources": [
+    {
+      "mode": "data",
+      "type": "aws_subnets",
+      "name": "default",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "filter": [
+              {
+                "name": "vpc-id",
+                "values": [
+                  "vpc-06d6802b7d59168f6"
+                ]
+              }
+            ],
+            "id": "us-east-1",
+            "ids": [
+              "subnet-0de31691c2a5d1f9a",
+              "subnet-0600c5f63cb00fdff",
+              "subnet-0cafd64d4b4b9fbc8",
+              "subnet-0042033db2f3d3301",
+              "subnet-0d7eb4e3458e2320d",
+              "subnet-0e3a8795a501c4929"
+            ],
+            "tags": null,
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "mode": "data",
+      "type": "aws_vpc",
+      "name": "default",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:ec2:us-east-1:561885755604:vpc/vpc-06d6802b7d59168f6",
+            "cidr_block": "172.31.0.0/16",
+            "cidr_block_associations": [
+              {
+                "association_id": "vpc-cidr-assoc-048386725969e91fc",
+                "cidr_block": "172.31.0.0/16",
+                "state": "associated"
+              }
+            ],
+            "default": true,
+            "dhcp_options_id": "dopt-0bf3429b4faf1af6f",
+            "enable_dns_hostnames": true,
+            "enable_dns_support": true,
+            "enable_network_address_usage_metrics": false,
+            "filter": null,
+            "id": "vpc-06d6802b7d59168f6",
+            "instance_tenancy": "default",
+            "ipv6_association_id": "",
+            "ipv6_cidr_block": "",
+            "main_route_table_id": "rtb-0b5562e55e2ef832f",
+            "owner_id": "561885755604",
+            "state": null,
+            "tags": {},
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_db_instance",
+      "name": "mysql",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 2,
+          "attributes": {
+            "address": "student-records-db-phase4.cyhvissgqf0l.us-east-1.rds.amazonaws.com",
+            "allocated_storage": 20,
+            "allow_major_version_upgrade": null,
+            "apply_immediately": false,
+            "arn": "arn:aws:rds:us-east-1:561885755604:db:student-records-db-phase4",
+            "auto_minor_version_upgrade": true,
+            "availability_zone": "us-east-1c",
+            "backup_retention_period": 7,
+            "backup_target": "region",
+            "backup_window": "03:00-04:00",
+            "blue_green_update": [],
+            "ca_cert_identifier": "rds-ca-rsa2048-g1",
+            "character_set_name": "",
+            "copy_tags_to_snapshot": false,
+            "custom_iam_instance_profile": "",
+            "customer_owned_ip_enabled": false,
+            "database_insights_mode": "standard",
+            "db_name": "STUDENTS",
+            "db_subnet_group_name": "student-records-db-subnet-group-phase4",
+            "dedicated_log_volume": false,
+            "delete_automated_backups": true,
+            "deletion_protection": false,
+            "domain": "",
+            "domain_auth_secret_arn": "",
+            "domain_dns_ips": [],
+            "domain_fqdn": "",
+            "domain_iam_role_name": "",
+            "domain_ou": "",
+            "enabled_cloudwatch_logs_exports": [],
+            "endpoint": "student-records-db-phase4.cyhvissgqf0l.us-east-1.rds.amazonaws.com:3306",
+            "engine": "mysql",
+            "engine_lifecycle_support": "open-source-rds-extended-support",
+            "engine_version": "8.0",
+            "engine_version_actual": "8.0.44",
+            "final_snapshot_identifier": null,
+            "hosted_zone_id": "Z2R2ITUGPM61AM",
+            "iam_database_authentication_enabled": false,
+            "id": "db-S5JME2KOKABHADOAIL3BAQBVEQ",
+            "identifier": "student-records-db-phase4",
+            "identifier_prefix": "",
+            "instance_class": "db.t3.micro",
+            "iops": 3000,
+            "kms_key_id": "arn:aws:kms:us-east-1:561885755604:key/8f9f7afd-c0c2-4373-942c-5acde0e5e1f7",
+            "latest_restorable_time": "2026-02-18T12:10:00Z",
+            "license_model": "general-public-license",
+            "listener_endpoint": [],
+            "maintenance_window": "mon:04:00-mon:05:00",
+            "manage_master_user_password": null,
+            "master_user_secret": [],
+            "master_user_secret_kms_key_id": null,
+            "max_allocated_storage": 100,
+            "monitoring_interval": 0,
+            "monitoring_role_arn": "",
+            "multi_az": false,
+            "nchar_character_set_name": "",
+            "network_type": "IPV4",
+            "option_group_name": "default:mysql-8-0",
+            "parameter_group_name": "default.mysql8.0",
+            "password": "Admin123456!",
+            "password_wo": null,
+            "password_wo_version": null,
+            "performance_insights_enabled": false,
+            "performance_insights_kms_key_id": "",
+            "performance_insights_retention_period": 0,
+            "port": 3306,
+            "publicly_accessible": false,
+            "replica_mode": "",
+            "replicas": [],
+            "replicate_source_db": "",
+            "resource_id": "db-S5JME2KOKABHADOAIL3BAQBVEQ",
+            "restore_to_point_in_time": [],
+            "s3_import": [],
+            "skip_final_snapshot": true,
+            "snapshot_identifier": null,
+            "status": "available",
+            "storage_encrypted": true,
+            "storage_throughput": 125,
+            "storage_type": "gp3",
+            "tags": {
+              "Name": "student-records-db-phase4",
+              "Phase": "4",
+              "Project": "StudentRecords"
+            },
+            "tags_all": {
+              "Name": "student-records-db-phase4",
+              "Phase": "4",
+              "Project": "StudentRecords"
+            },
+            "timeouts": null,
+            "timezone": "",
+            "upgrade_storage_config": null,
+            "username": "admin",
+            "vpc_security_group_ids": [
+              "sg-066eae2b465117dfa"
+            ]
+          },
+          "sensitive_attributes": [
+            [
+              {
+                "type": "get_attr",
+                "value": "password"
+              }
+            ],
+            [
+              {
+                "type": "get_attr",
+                "value": "password_wo"
+              }
+            ]
+          ],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjozMDAwMDAwMDAwMDAwLCJkZWxldGUiOjM2MDAwMDAwMDAwMDAsInVwZGF0ZSI6NDgwMDAwMDAwMDAwMH0sInNjaGVtYV92ZXJzaW9uIjoiMiJ9",
+          "dependencies": [
+            "aws_db_subnet_group.mysql",
+            "aws_security_group.docker_instance",
+            "aws_security_group.rds_mysql",
+            "data.aws_subnets.default",
+            "data.aws_vpc.default"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_db_subnet_group",
+      "name": "mysql",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:rds:us-east-1:561885755604:subgrp:student-records-db-subnet-group-phase4",
+            "description": "Managed by Terraform",
+            "id": "student-records-db-subnet-group-phase4",
+            "name": "student-records-db-subnet-group-phase4",
+            "name_prefix": "",
+            "subnet_ids": [
+              "subnet-0042033db2f3d3301",
+              "subnet-0600c5f63cb00fdff",
+              "subnet-0cafd64d4b4b9fbc8",
+              "subnet-0d7eb4e3458e2320d",
+              "subnet-0de31691c2a5d1f9a",
+              "subnet-0e3a8795a501c4929"
+            ],
+            "supported_network_types": [
+              "IPV4"
+            ],
+            "tags": {
+              "Name": "student-records-db-subnet-group-phase4",
+              "Phase": "4",
+              "Project": "StudentRecords"
+            },
+            "tags_all": {
+              "Name": "student-records-db-subnet-group-phase4",
+              "Phase": "4",
+              "Project": "StudentRecords"
+            },
+            "vpc_id": "vpc-06d6802b7d59168f6"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "bnVsbA==",
+          "dependencies": [
+            "data.aws_subnets.default",
+            "data.aws_vpc.default"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_ecr_repository",
+      "name": "student_records_app",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 0,
+          "attributes": {
+            "arn": "arn:aws:ecr:us-east-1:561885755604:repository/student-records-app",
+            "encryption_configuration": [
+              {
+                "encryption_type": "AES256",
+                "kms_key": ""
+              }
+            ],
+            "force_delete": null,
+            "id": "student-records-app",
+            "image_scanning_configuration": [
+              {
+                "scan_on_push": true
+              }
+            ],
+            "image_tag_mutability": "MUTABLE",
+            "name": "student-records-app",
+            "registry_id": "561885755604",
+            "repository_url": "561885755604.dkr.ecr.us-east-1.amazonaws.com/student-records-app",
+            "tags": {
+              "Environment": "production",
+              "Name": "student-records-app-ecr",
+              "Phase": "4",
+              "Project": "StudentRecords"
+            },
+            "tags_all": {
+              "Environment": "production",
+              "Name": "student-records-app-ecr",
+              "Phase": "4",
+              "Project": "StudentRecords"
+            },
+            "timeouts": null
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiZGVsZXRlIjoxMjAwMDAwMDAwMDAwfX0="
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "docker_instance",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "arn": "arn:aws:ec2:us-east-1:561885755604:security-group/sg-05120938f95a87f54",
+            "description": "Security group for Docker instance running student records app",
+            "egress": [
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "description": "Allow all outbound traffic",
+                "from_port": 0,
+                "ipv6_cidr_blocks": [],
+                "prefix_list_ids": [],
+                "protocol": "-1",
+                "security_groups": [],
+                "self": false,
+                "to_port": 0
+              }
+            ],
+            "id": "sg-05120938f95a87f54",
+            "ingress": [
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "description": "HTTP for application",
+                "from_port": 80,
+                "ipv6_cidr_blocks": [],
+                "prefix_list_ids": [],
+                "protocol": "tcp",
+                "security_groups": [],
+                "self": false,
+                "to_port": 80
+              },
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "description": "SSH from anywhere",
+                "from_port": 22,
+                "ipv6_cidr_blocks": [],
+                "prefix_list_ids": [],
+                "protocol": "tcp",
+                "security_groups": [],
+                "self": false,
+                "to_port": 22
+              }
+            ],
+            "name": "student-records-docker-instance-sg",
+            "name_prefix": "",
+            "owner_id": "561885755604",
+            "revoke_rules_on_delete": false,
+            "tags": {
+              "Name": "student-records-docker-instance-sg",
+              "Phase": "4",
+              "Project": "StudentRecords"
+            },
+            "tags_all": {
+              "Name": "student-records-docker-instance-sg",
+              "Phase": "4",
+              "Project": "StudentRecords"
+            },
+            "timeouts": null,
+            "vpc_id": "vpc-06d6802b7d59168f6"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6OTAwMDAwMDAwMDAwfSwic2NoZW1hX3ZlcnNpb24iOiIxIn0=",
+          "dependencies": [
+            "data.aws_vpc.default"
+          ]
+        }
+      ]
+    },
+    {
+      "mode": "managed",
+      "type": "aws_security_group",
+      "name": "rds_mysql",
+      "provider": "provider[\"registry.terraform.io/hashicorp/aws\"]",
+      "instances": [
+        {
+          "schema_version": 1,
+          "attributes": {
+            "arn": "arn:aws:ec2:us-east-1:561885755604:security-group/sg-066eae2b465117dfa",
+            "description": "Security group for RDS MySQL database",
+            "egress": [
+              {
+                "cidr_blocks": [
+                  "0.0.0.0/0"
+                ],
+                "description": "Allow all outbound traffic",
+                "from_port": 0,
+                "ipv6_cidr_blocks": [],
+                "prefix_list_ids": [],
+                "protocol": "-1",
+                "security_groups": [],
+                "self": false,
+                "to_port": 0
+              }
+            ],
+            "id": "sg-066eae2b465117dfa",
+            "ingress": [
+              {
+                "cidr_blocks": [],
+                "description": "MySQL from Docker instance",
+                "from_port": 3306,
+                "ipv6_cidr_blocks": [],
+                "prefix_list_ids": [],
+                "protocol": "tcp",
+                "security_groups": [
+                  "sg-05120938f95a87f54"
+                ],
+                "self": false,
+                "to_port": 3306
+              }
+            ],
+            "name": "student-records-rds-mysql-sg-phase4",
+            "name_prefix": "",
+            "owner_id": "561885755604",
+            "revoke_rules_on_delete": false,
+            "tags": {
+              "Name": "student-records-rds-mysql-sg-phase4",
+              "Phase": "4",
+              "Project": "StudentRecords"
+            },
+            "tags_all": {
+              "Name": "student-records-rds-mysql-sg-phase4",
+              "Phase": "4",
+              "Project": "StudentRecords"
+            },
+            "timeouts": null,
+            "vpc_id": "vpc-06d6802b7d59168f6"
+          },
+          "sensitive_attributes": [],
+          "identity_schema_version": 0,
+          "private": "eyJlMmJmYjczMC1lY2FhLTExZTYtOGY4OC0zNDM2M2JjN2M0YzAiOnsiY3JlYXRlIjo2MDAwMDAwMDAwMDAsImRlbGV0ZSI6OTAwMDAwMDAwMDAwfSwic2NoZW1hX3ZlcnNpb24iOiIxIn0=",
+          "dependencies": [
+            "aws_security_group.docker_instance",
+            "data.aws_vpc.default"
+          ]
+        }
+      ]
+    }
+  ],
+  "check_results": null
+}

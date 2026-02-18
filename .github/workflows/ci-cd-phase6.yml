@@ -1,4 +1,4 @@
-name: CI/CD Pipeline Phase 6 - High Availability & Auto-Scaling
+name: CI/CD Pipeline Phase 6 - ECS Container Orchestration
 
 on:
   push:
@@ -168,9 +168,9 @@ jobs:
           cd phase4
           docker compose down
 
-  # Stage 5: Deploy to AWS with High Availability
+  # Stage 5: Deploy to AWS with ECS
   deploy:
-    name: Deploy HA Infrastructure to AWS
+    name: Deploy ECS Infrastructure to AWS
     runs-on: ubuntu-latest
     needs: load-test
     if: github.event_name == 'push' && github.ref == 'refs/heads/phase6'
@@ -227,25 +227,49 @@ jobs:
           docker push $ECR_REGISTRY/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
           echo "✓ Docker images pushed to ECR"
 
-      - name: Get Load Balancer URL
+      - name: Force ECS Service Update
+        run: |
+          ECS_CLUSTER=$(cd phase6/terraform && terraform output -raw ecs_cluster_name)
+          ECS_SERVICE=$(cd phase6/terraform && terraform output -raw ecs_service_name)
+          aws ecs update-service --cluster $ECS_CLUSTER --service $ECS_SERVICE --force-new-deployment
+          echo "✓ ECS service updated with new image"
+
+      - name: Get Application URL
         working-directory: ./phase6/terraform
         run: |
           ALB_URL=$(terraform output -raw alb_dns_name || echo "not-available")
+          ECS_CLUSTER=$(terraform output -raw ecs_cluster_name)
+          ECS_SERVICE=$(terraform output -raw ecs_service_name)
           echo "Application URL: http://$ALB_URL"
+          echo "ECS Cluster: $ECS_CLUSTER"
+          echo "ECS Service: $ECS_SERVICE"
           echo "ALB_URL=$ALB_URL" >> $GITHUB_ENV
+          echo "ECS_CLUSTER=$ECS_CLUSTER" >> $GITHUB_ENV
+          echo "ECS_SERVICE=$ECS_SERVICE" >> $GITHUB_ENV
+
+      - name: Wait for ECS Service Stability
+        run: |
+          echo "Waiting for ECS service to stabilize..."
+          aws ecs wait services-stable --cluster ${{ env.ECS_CLUSTER }} --services ${{ env.ECS_SERVICE }}
+          echo "✓ ECS service is stable"
 
       - name: Verify deployment
         run: |
           echo "Deployment completed successfully!"
-          echo "High Availability Application URL: http://${{ env.ALB_URL }}"
+          echo "ECS Application URL: http://${{ env.ALB_URL }}"
           echo "Access the application at: http://${{ env.ALB_URL }}/students"
-          echo "✓ Phase 6 deployment verified"
+          echo "✓ Phase 6 ECS deployment verified"
 
       - name: Output deployment summary
         run: |
-          echo "## Phase 6 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## Phase 6 ECS Deployment Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Orchestrator**: Amazon ECS (Fargate)" >> $GITHUB_STEP_SUMMARY
           echo "- **Application Load Balancer**: http://${{ env.ALB_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECS Cluster**: ${{ env.ECS_CLUSTER }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECS Service**: ${{ env.ECS_SERVICE }}" >> $GITHUB_STEP_SUMMARY
           echo "- **ECR Repository**: ${{ env.ECR_REPOSITORY }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Desired Tasks**: 2 (Min: 2, Max: 6)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Auto-Scaling**: CPU (70%) & Memory (80%)" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Deployment Time**: $(date)" >> $GITHUB_STEP_SUMMARY

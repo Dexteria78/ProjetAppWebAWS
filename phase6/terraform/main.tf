@@ -1,3 +1,4 @@
+# Phase 6 - ECS Orchestrator Infrastructure
 terraform {
   required_version = ">= 1.0"
   required_providers {
@@ -7,7 +8,6 @@ terraform {
     }
   }
   
-  # Backend S3 pour partager le state (Phase 6 séparé de Phase 4/5)
   backend "s3" {
     bucket = "student-records-terraform-state-1771428261"
     key    = "phase6/terraform.tfstate"
@@ -33,33 +33,31 @@ data "aws_subnets" "default" {
   }
 }
 
-data "aws_ami" "amazon_linux_2023" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["al2023-ami-*-x86_64"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
 data "aws_iam_role" "lab_role" {
   name = "LabRole"
 }
 
-data "aws_iam_instance_profile" "lab_instance_profile" {
-  name = "LabInstanceProfile"
+# Variables
+variable "aws_region" {
+  default = "us-east-1"
 }
 
-# ===================================
-# ECR Repository (réutilisé de Phase 4)
-# ===================================
-resource "aws_ecr_repository" "student_records_app" {
+variable "app_name" {
+  default = "student-records-ecs"
+}
+
+variable "ecr_repository_name" {
+  default = "student-records-app-ha"
+}
+
+variable "db_identifier" {
+  default = "student-records-db"
+}
+
+# ========================================
+# ECR Repository
+# ========================================
+resource "aws_ecr_repository" "app" {
   name                 = var.ecr_repository_name
   image_tag_mutability = "MUTABLE"
 
@@ -68,23 +66,23 @@ resource "aws_ecr_repository" "student_records_app" {
   }
 
   tags = {
-    Name    = var.ecr_repository_name
-    Phase   = "6"
+    Name    = "${var.ecr_repository_name}-ecr"
     Project = "StudentRecords"
+    Phase   = "6"
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "student_records_app" {
-  repository = aws_ecr_repository.student_records_app.name
+resource "aws_ecr_lifecycle_policy" "app" {
+  repository = aws_ecr_repository.app.name
 
   policy = jsonencode({
     rules = [{
       rulePriority = 1
-      description  = "Keep last 5 images"
+      description  = "Keep last 10 images"
       selection = {
         tagStatus     = "any"
         countType     = "imageCountMoreThan"
-        countNumber   = 5
+        countNumber   = 10
       }
       action = {
         type = "expire"
@@ -93,146 +91,18 @@ resource "aws_ecr_lifecycle_policy" "student_records_app" {
   })
 }
 
-# ===================================
-# RDS MySQL Database (Multi-AZ)
-# ===================================
-resource "aws_db_subnet_group" "mysql" {
-  name       = "${var.db_identifier}-subnet-group-phase6"
-  subnet_ids = data.aws_subnets.default.ids
+# ========================================
+# Security Groups
+# ========================================
 
-  tags = {
-    Name    = "${var.db_identifier}-subnet-group-phase6"
-    Phase   = "6"
-    Project = "StudentRecords"
-  }
-}
-
-resource "aws_security_group" "rds_mysql" {
-  name        = "${var.db_identifier}-rds-mysql-sg-phase6"
-  description = "Security group for RDS MySQL database"
-  vpc_id      = data.aws_vpc.default.id
-
-  ingress {
-    description     = "MySQL from ALB instances"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.web_instances.id]
-  }
-
-  egress {
-    description = "Allow all outbound traffic"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name    = "${var.db_identifier}-rds-mysql-sg-phase6"
-    Phase   = "6"
-    Project = "StudentRecords"
-  }
-}
-
-resource "aws_db_instance" "mysql" {
-  identifier                = "${var.db_identifier}-phase6"
-  engine                    = "mysql"
-  engine_version            = "8.0.35"
-  instance_class            = var.db_instance_class
-  allocated_storage         = 20
-  storage_type              = "gp3"
-  storage_encrypted         = true
-  
-  # Multi-AZ for high availability
-  multi_az                  = true
-  
-  db_name                   = var.db_name
-  username                  = var.db_username
-  password                  = random_password.db_password.result
-  
-  db_subnet_group_name      = aws_db_subnet_group.mysql.name
-  vpc_security_group_ids    = [aws_security_group.rds_mysql.id]
-  
-  backup_retention_period   = 7
-  backup_window             = "03:00-04:00"
-  maintenance_window        = "mon:04:00-mon:05:00"
-  
-  skip_final_snapshot       = true
-  deletion_protection       = false
-  
-  enabled_cloudwatch_logs_exports = ["error", "general", "slowquery"]
-
-  tags = {
-    Name    = "${var.db_identifier}-phase6"
-    Phase   = "6"
-    Project = "StudentRecords"
-  }
-}
-
-# ===================================
-# Secrets Manager
-# ===================================
-resource "random_password" "db_password" {
-  length  = 16
-  special = true
-}
-
-resource "aws_secretsmanager_secret" "db_credentials" {
-  name_prefix             = "${var.db_identifier}-db-credentials-phase6-"
-  recovery_window_in_days = 0
-
-  tags = {
-    Name    = "${var.db_identifier}-db-credentials-phase6"
-    Phase   = "6"
-    Project = "StudentRecords"
-  }
-}
-
-resource "aws_secretsmanager_secret_version" "db_credentials" {
-  secret_id = aws_secretsmanager_secret.db_credentials.id
-  secret_string = jsonencode({
-    username = var.db_username
-    password = random_password.db_password.result
-    host     = aws_db_instance.mysql.address
-    port     = aws_db_instance.mysql.port
-    dbname   = var.db_name
-  })
-}
-
-# Also create the "Mydbsecret" for app compatibility
-resource "aws_secretsmanager_secret" "app_db_secret" {
-  name                    = "Mydbsecret"
-  recovery_window_in_days = 0
-
-  tags = {
-    Name    = "Mydbsecret"
-    Phase   = "6"
-    Project = "StudentRecords"
-  }
-}
-
-resource "aws_secretsmanager_secret_version" "app_db_secret" {
-  secret_id = aws_secretsmanager_secret.app_db_secret.id
-  secret_string = jsonencode({
-    username = var.db_username
-    password = random_password.db_password.result
-    host     = aws_db_instance.mysql.address
-    port     = aws_db_instance.mysql.port
-    dbname   = var.db_name
-  })
-}
-
-# ===================================
-# Application Load Balancer
-# ===================================
+# ALB Security Group
 resource "aws_security_group" "alb" {
-  name        = "student-records-alb-sg-phase6"
+  name        = "${var.app_name}-alb-sg"
   description = "Security group for Application Load Balancer"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    description = "HTTP from internet"
+    description = "HTTP from Internet"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -240,7 +110,7 @@ resource "aws_security_group" "alb" {
   }
 
   egress {
-    description = "Allow all outbound traffic"
+    description = "All outbound"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -248,71 +118,16 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name    = "student-records-alb-sg-phase6"
-    Phase   = "6"
+    Name    = "${var.app_name}-alb-sg"
     Project = "StudentRecords"
-  }
-}
-
-resource "aws_lb" "application" {
-  name               = "student-records-alb-phase6"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets            = data.aws_subnets.default.ids
-
-  enable_deletion_protection = false
-  enable_http2              = true
-
-  tags = {
-    Name    = "student-records-alb-phase6"
     Phase   = "6"
-    Project = "StudentRecords"
   }
 }
 
-resource "aws_lb_target_group" "application" {
-  name     = "student-records-tg-phase6"
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = data.aws_vpc.default.id
-
-  health_check {
-    enabled             = true
-    healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    path                = "/students"
-    matcher             = "200"
-  }
-
-  deregistration_delay = 30
-
-  tags = {
-    Name    = "student-records-tg-phase6"
-    Phase   = "6"
-    Project = "StudentRecords"
-  }
-}
-
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.application.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.application.arn
-  }
-}
-
-# ===================================
-# Launch Template
-# ===================================
-resource "aws_security_group" "web_instances" {
-  name        = "student-records-web-instances-sg-phase6"
-  description = "Security group for web server instances"
+# ECS Tasks Security Group
+resource "aws_security_group" "ecs_tasks" {
+  name        = "${var.app_name}-ecs-tasks-sg"
+  description = "Security group for ECS tasks"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
@@ -323,16 +138,8 @@ resource "aws_security_group" "web_instances" {
     security_groups = [aws_security_group.alb.id]
   }
 
-  ingress {
-    description = "SSH from anywhere"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   egress {
-    description = "Allow all outbound traffic"
+    description = "All outbound"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
@@ -340,275 +147,516 @@ resource "aws_security_group" "web_instances" {
   }
 
   tags = {
-    Name    = "student-records-web-instances-sg-phase6"
-    Phase   = "6"
+    Name    = "${var.app_name}-ecs-tasks-sg"
     Project = "StudentRecords"
+    Phase   = "6"
   }
 }
 
-resource "aws_launch_template" "web_server" {
-  name_prefix   = "student-records-lt-phase6-"
-  image_id      = data.aws_ami.amazon_linux_2023.id
-  instance_type = var.instance_type
+# RDS Security Group
+resource "aws_security_group" "rds" {
+  name        = "${var.app_name}-rds-sg"
+  description = "Security group for RDS Multi-AZ"
+  vpc_id      = data.aws_vpc.default.id
 
-  iam_instance_profile {
-    arn = data.aws_iam_instance_profile.lab_instance_profile.arn
+  ingress {
+    description     = "MySQL from ECS tasks"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs_tasks.id]
   }
 
-  vpc_security_group_ids = [aws_security_group.web_instances.id]
-
-  user_data = base64encode(templatefile("${path.module}/userdata.sh", {
-    aws_region          = var.aws_region
-    ecr_repository_uri  = aws_ecr_repository.student_records_app.repository_url
-    db_secret_name      = aws_secretsmanager_secret.db_credentials.name
-    db_name             = var.db_name
-    db_host             = aws_db_instance.mysql.address
-  }))
-
-  monitoring {
-    enabled = true
-  }
-
-  metadata_options {
-    http_endpoint               = "enabled"
-    http_tokens                 = "required"
-    http_put_response_hop_limit = 1
-  }
-
-  tag_specifications {
-    resource_type = "instance"
-    tags = {
-      Name    = "student-records-web-instance-phase6"
-      Phase   = "6"
-      Project = "StudentRecords"
-    }
+  egress {
+    description = "All outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
-    Name    = "student-records-launch-template-phase6"
-    Phase   = "6"
+    Name    = "${var.app_name}-rds-sg"
     Project = "StudentRecords"
+    Phase   = "6"
   }
 }
 
-# ===================================
-# Auto Scaling Group
-# ===================================
-resource "aws_autoscaling_group" "web_servers" {
-  name                = "student-records-asg-phase6"
-  vpc_zone_identifier = data.aws_subnets.default.ids
-  target_group_arns   = [aws_lb_target_group.application.arn]
-  
-  min_size         = var.asg_min_size
-  max_size         = var.asg_max_size
-  desired_capacity = var.asg_desired_capacity
-  
-  health_check_type         = "ELB"
-  health_check_grace_period = 300
+# ========================================
+# RDS MySQL Multi-AZ
+# ========================================
+resource "aws_db_subnet_group" "mysql" {
+  name       = "${var.db_identifier}-subnet-group-phase6"
+  subnet_ids = data.aws_subnets.default.ids
 
-  launch_template {
-    id      = aws_launch_template.web_server.id
-    version = "$Latest"
-  }
-
-  enabled_metrics = [
-    "GroupDesiredCapacity",
-    "GroupInServiceInstances",
-    "GroupMinSize",
-    "GroupMaxSize",
-    "GroupTotalInstances"
-  ]
-
-  tag {
-    key                 = "Name"
-    value               = "student-records-asg-instance-phase6"
-    propagate_at_launch = true
-  }
-
-  tag {
-    key                 = "Phase"
-    value               = "6"
-    propagate_at_launch = true
-  }
-
-  tag {
-    key                 = "Project"
-    value               = "StudentRecords"
-    propagate_at_launch = true
+  tags = {
+    Name    = "${var.db_identifier}-subnet-group-phase6"
+    Project = "StudentRecords"
+    Phase   = "6"
   }
 }
 
-# ===================================
-# Auto Scaling Policies
-# ===================================
-
-# Scale UP policy (CPU > 70%)
-resource "aws_autoscaling_policy" "scale_up" {
-  name                   = "student-records-scale-up-phase6"
-  scaling_adjustment     = 1
-  adjustment_type        = "ChangeInCapacity"
-  cooldown               = 300
-  autoscaling_group_name = aws_autoscaling_group.web_servers.name
+resource "random_password" "db_password" {
+  length  = 16
+  special = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-resource "aws_cloudwatch_metric_alarm" "cpu_high" {
-  alarm_name          = "student-records-cpu-high-phase6"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "70"
-  alarm_description   = "Scale up when CPU exceeds 70%"
-  alarm_actions       = [aws_autoscaling_policy.scale_up.arn]
+resource "aws_db_instance" "mysql" {
+  identifier             = "${var.db_identifier}-phase6"
+  engine                 = "mysql"
+  engine_version         = "8.0"
+  instance_class         = "db.t3.micro"
+  allocated_storage      = 20
+  storage_type           = "gp3"
+  db_name                = "studentrecordsdb"
+  username               = "admin"
+  password               = random_password.db_password.result
+  parameter_group_name   = "default.mysql8.0"
+  db_subnet_group_name   = aws_db_subnet_group.mysql.name
+  vpc_security_group_ids = [aws_security_group.rds.id]
+  skip_final_snapshot    = true
+  publicly_accessible    = false
+  multi_az               = true
+  backup_retention_period = 7
+  backup_window          = "03:00-04:00"
+  maintenance_window     = "mon:04:00-mon:05:00"
 
-  dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.web_servers.name
+  tags = {
+    Name    = "${var.db_identifier}-phase6"
+    Project = "StudentRecords"
+    Phase   = "6"
   }
 }
 
-# Scale DOWN policy (CPU < 30%)
-resource "aws_autoscaling_policy" "scale_down" {
-  name                   = "student-records-scale-down-phase6"
-  scaling_adjustment     = -1
-  adjustment_type        = "ChangeInCapacity"
-  cooldown               = 300
-  autoscaling_group_name = aws_autoscaling_group.web_servers.name
-}
+# ========================================
+# Secrets Manager
+# ========================================
+resource "aws_secretsmanager_secret" "db_credentials" {
+  name                    = "${var.app_name}-db-credentials-phase6"
+  description             = "Database credentials for Student Records ECS Phase 6"
+  recovery_window_in_days = 0
 
-resource "aws_cloudwatch_metric_alarm" "cpu_low" {
-  alarm_name          = "student-records-cpu-low-phase6"
-  comparison_operator = "LessThanThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/EC2"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "30"
-  alarm_description   = "Scale down when CPU below 30%"
-  alarm_actions       = [aws_autoscaling_policy.scale_down.arn]
-
-  dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.web_servers.name
+  tags = {
+    Name    = "${var.app_name}-db-credentials-phase6"
+    Project = "StudentRecords"
+    Phase   = "6"
   }
 }
 
-# Target tracking scaling policy (maintain 50% CPU)
-resource "aws_autoscaling_policy" "target_tracking" {
-  name                   = "student-records-target-tracking-phase6"
-  autoscaling_group_name = aws_autoscaling_group.web_servers.name
-  policy_type            = "TargetTrackingScaling"
-
-  target_tracking_configuration {
-    predefined_metric_specification {
-      predefined_metric_type = "ASGAverageCPUUtilization"
-    }
-    target_value = 50.0
-  }
-}
-
-# ===================================
-# CloudWatch Dashboard
-# ===================================
-resource "aws_cloudwatch_dashboard" "main" {
-  dashboard_name = "student-records-dashboard-phase6"
-
-  dashboard_body = jsonencode({
-    widgets = [
-      {
-        type = "metric"
-        properties = {
-          metrics = [
-            ["AWS/ApplicationELB", "TargetResponseTime", { stat = "Average" }],
-            [".", "RequestCount", { stat = "Sum" }],
-            [".", "HTTPCode_Target_2XX_Count", { stat = "Sum" }],
-            [".", "HTTPCode_Target_5XX_Count", { stat = "Sum" }]
-          ]
-          period = 300
-          stat   = "Average"
-          region = var.aws_region
-          title  = "ALB Metrics"
-        }
-      },
-      {
-        type = "metric"
-        properties = {
-          metrics = [
-            ["AWS/EC2", "CPUUtilization", { stat = "Average", dimensions = { AutoScalingGroupName = aws_autoscaling_group.web_servers.name } }]
-          ]
-          period = 300
-          stat   = "Average"
-          region = var.aws_region
-          title  = "Auto Scaling Group CPU"
-        }
-      },
-      {
-        type = "metric"
-        properties = {
-          metrics = [
-            ["AWS/AutoScaling", "GroupDesiredCapacity", { dimensions = { AutoScalingGroupName = aws_autoscaling_group.web_servers.name } }],
-            [".", "GroupInServiceInstances", { dimensions = { AutoScalingGroupName = aws_autoscaling_group.web_servers.name } }],
-            [".", "GroupMinSize", { dimensions = { AutoScalingGroupName = aws_autoscaling_group.web_servers.name } }],
-            [".", "GroupMaxSize", { dimensions = { AutoScalingGroupName = aws_autoscaling_group.web_servers.name } }]
-          ]
-          period = 300
-          stat   = "Average"
-          region = var.aws_region
-          title  = "Auto Scaling Group Instances"
-        }
-      },
-      {
-        type = "metric"
-        properties = {
-          metrics = [
-            ["AWS/RDS", "DatabaseConnections", { dimensions = { DBInstanceIdentifier = aws_db_instance.mysql.id } }],
-            [".", "CPUUtilization", { dimensions = { DBInstanceIdentifier = aws_db_instance.mysql.id } }],
-            [".", "FreeableMemory", { dimensions = { DBInstanceIdentifier = aws_db_instance.mysql.id } }]
-          ]
-          period = 300
-          stat   = "Average"
-          region = var.aws_region
-          title  = "RDS Metrics"
-        }
-      }
-    ]
+resource "aws_secretsmanager_secret_version" "db_credentials" {
+  secret_id = aws_secretsmanager_secret.db_credentials.id
+  secret_string = jsonencode({
+    username = aws_db_instance.mysql.username
+    password = random_password.db_password.result
+    host     = aws_db_instance.mysql.endpoint
+    database = aws_db_instance.mysql.db_name
   })
 }
 
-# ===================================
-# CloudWatch Alarms
-# ===================================
-resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_hosts" {
-  alarm_name          = "student-records-unhealthy-hosts-phase6"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "UnHealthyHostCount"
-  namespace           = "AWS/ApplicationELB"
-  period              = "60"
-  statistic           = "Average"
-  threshold           = "0"
-  alarm_description   = "Alert when there are unhealthy hosts"
-  treat_missing_data  = "notBreaching"
+# ========================================
+# Application Load Balancer
+# ========================================
+resource "aws_lb" "app" {
+  name               = "${var.app_name}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = data.aws_subnets.default.ids
 
-  dimensions = {
-    TargetGroup  = aws_lb_target_group.application.arn_suffix
-    LoadBalancer = aws_lb.application.arn_suffix
+  enable_deletion_protection = false
+  enable_http2              = true
+
+  tags = {
+    Name    = "${var.app_name}-alb"
+    Project = "StudentRecords"
+    Phase   = "6"
   }
 }
 
-resource "aws_cloudwatch_metric_alarm" "rds_cpu_high" {
-  alarm_name          = "student-records-rds-cpu-high-phase6"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = "2"
-  metric_name         = "CPUUtilization"
-  namespace           = "AWS/RDS"
-  period              = "300"
-  statistic           = "Average"
-  threshold           = "80"
-  alarm_description   = "Alert when RDS CPU exceeds 80%"
+resource "aws_lb_target_group" "app" {
+  name        = "${var.app_name}-tg"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = data.aws_vpc.default.id
+  target_type = "ip"
 
-  dimensions = {
-    DBInstanceIdentifier = aws_db_instance.mysql.id
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    path                = "/"
+    matcher             = "200"
   }
+
+  deregistration_delay = 30
+
+  tags = {
+    Name    = "${var.app_name}-tg"
+    Project = "StudentRecords"
+    Phase   = "6"
+  }
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.app.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
+  }
+}
+
+# ========================================
+# ECS Cluster
+# ========================================
+resource "aws_ecs_cluster" "main" {
+  name = "${var.app_name}-cluster"
+
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+
+  tags = {
+    Name    = "${var.app_name}-cluster"
+    Project = "StudentRecords"
+    Phase   = "6"
+  }
+}
+
+resource "aws_ecs_cluster_capacity_providers" "main" {
+  cluster_name = aws_ecs_cluster.main.name
+
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+    weight            = 1
+    base              = 1
+  }
+}
+
+# ========================================
+# CloudWatch Logs
+# ========================================
+resource "aws_cloudwatch_log_group" "app" {
+  name              = "/ecs/${var.app_name}"
+  retention_in_days = 7
+
+  tags = {
+    Name    = "/ecs/${var.app_name}"
+    Project = "StudentRecords"
+    Phase   = "6"
+  }
+}
+
+# ========================================
+# IAM Role for ECS Task Execution
+# ========================================
+resource "aws_iam_role" "ecs_task_execution" {
+  name = "${var.app_name}-ecs-task-execution-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+    }]
+  })
+
+  tags = {
+    Name    = "${var.app_name}-ecs-task-execution-role"
+    Project = "StudentRecords"
+    Phase   = "6"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution" {
+  role       = aws_iam_role.ecs_task_execution.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role_policy" "ecs_task_execution_secrets" {
+  name = "${var.app_name}-secrets-policy"
+  role = aws_iam_role.ecs_task_execution.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "secretsmanager:GetSecretValue"
+      ]
+      Resource = aws_secretsmanager_secret.db_credentials.arn
+    }]
+  })
+}
+
+# ========================================
+# IAM Role for ECS Task (Runtime)
+# ========================================
+resource "aws_iam_role" "ecs_task" {
+  name = "${var.app_name}-ecs-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+    }]
+  })
+
+  tags = {
+    Name    = "${var.app_name}-ecs-task-role"
+    Project = "StudentRecords"
+    Phase   = "6"
+  }
+}
+
+resource "aws_iam_role_policy" "ecs_task_secrets" {
+  name = "${var.app_name}-task-secrets-policy"
+  role = aws_iam_role.ecs_task.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "secretsmanager:GetSecretValue"
+      ]
+      Resource = aws_secretsmanager_secret.db_credentials.arn
+    }]
+  })
+}
+
+# ========================================
+# ECS Task Definition
+# ========================================
+resource "aws_ecs_task_definition" "app" {
+  family                   = var.app_name
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = aws_iam_role.ecs_task_execution.arn
+  task_role_arn            = aws_iam_role.ecs_task.arn
+
+  container_definitions = jsonencode([{
+    name      = "app"
+    image     = "${aws_ecr_repository.app.repository_url}:latest"
+    essential = true
+
+    portMappings = [{
+      containerPort = 80
+      hostPort      = 80
+      protocol      = "tcp"
+    }]
+
+    environment = [
+      {
+        name  = "NODE_ENV"
+        value = "production"
+      },
+      {
+        name  = "PORT"
+        value = "80"
+      },
+      {
+        name  = "AWS_REGION"
+        value = var.aws_region
+      },
+      {
+        name  = "SECRET_ARN"
+        value = aws_secretsmanager_secret.db_credentials.arn
+      }
+    ]
+
+    logConfiguration = {
+      logDriver = "awslogs"
+      options = {
+        "awslogs-group"         = aws_cloudwatch_log_group.app.name
+        "awslogs-region"        = var.aws_region
+        "awslogs-stream-prefix" = "ecs"
+      }
+    }
+
+    healthCheck = {
+      command     = ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval    = 30
+      timeout     = 5
+      retries     = 3
+      startPeriod = 60
+    }
+  }])
+
+  tags = {
+    Name    = "${var.app_name}-task"
+    Project = "StudentRecords"
+    Phase   = "6"
+  }
+}
+
+# ========================================
+# ECS Service
+# ========================================
+resource "aws_ecs_service" "app" {
+  name            = "${var.app_name}-service"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.app.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = data.aws_subnets.default.ids
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.app.arn
+    container_name   = "app"
+    container_port   = 80
+  }
+
+  health_check_grace_period_seconds = 60
+
+  depends_on = [aws_lb_listener.http]
+
+  tags = {
+    Name    = "${var.app_name}-service"
+    Project = "StudentRecords"
+    Phase   = "6"
+  }
+}
+
+# ========================================
+# Auto Scaling
+# ========================================
+resource "aws_appautoscaling_target" "ecs" {
+  max_capacity       = 6
+  min_capacity       = 2
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.app.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "ecs_cpu" {
+  name               = "${var.app_name}-cpu-autoscaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    target_value       = 70.0
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 60
+
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+  }
+}
+
+resource "aws_appautoscaling_policy" "ecs_memory" {
+  name               = "${var.app_name}-memory-autoscaling"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    target_value       = 80.0
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 60
+
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+  }
+}
+
+# ========================================
+# Outputs
+# ========================================
+output "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer"
+  value       = aws_lb.app.dns_name
+}
+
+output "alb_url" {
+  description = "URL of the application"
+  value       = "http://${aws_lb.app.dns_name}"
+}
+
+output "ecs_cluster_name" {
+  description = "Name of the ECS cluster"
+  value       = aws_ecs_cluster.main.name
+}
+
+output "ecs_service_name" {
+  description = "Name of the ECS service"
+  value       = aws_ecs_service.app.name
+}
+
+output "ecr_repository_url" {
+  description = "ECR repository URL"
+  value       = aws_ecr_repository.app.repository_url
+}
+
+output "rds_endpoint" {
+  description = "RDS endpoint"
+  value       = aws_db_instance.mysql.endpoint
+  sensitive   = true
+}
+
+output "secret_arn" {
+  description = "Secrets Manager ARN"
+  value       = aws_secretsmanager_secret.db_credentials.arn
+}
+
+# ==========================================
+# Outputs
+# ==========================================
+
+output "alb_dns_name" {
+  description = "DNS name of the Application Load Balancer"
+  value       = aws_lb.app.dns_name
+}
+
+output "ecs_cluster_name" {
+  description = "Name of the ECS cluster"
+  value       = aws_ecs_cluster.main.name
+}
+
+output "ecs_service_name" {
+  description = "Name of the ECS service"
+  value       = aws_ecs_service.app.name
+}
+
+output "ecr_repository_url" {
+  description = "URL of the ECR repository"
+  value       = aws_ecr_repository.app.repository_url
+}
+
+output "rds_endpoint" {
+  description = "RDS endpoint"
+  value       = aws_db_instance.mysql.endpoint
+  sensitive   = true
+}
+
+output "cloudwatch_log_group" {
+  description = "CloudWatch log group name"
+  value       = aws_cloudwatch_log_group.app.name
 }
