@@ -149,9 +149,9 @@ echo "Starting application container..."
 docker run -d \
     --name student-records-app \
     --restart unless-stopped \
-    -p 80:80 \
+    -p 80:3000 \
     -e NODE_ENV=production \
-    -e APP_PORT=80 \
+    -e APP_PORT=3000 \
     -e APP_DB_HOST=$DB_HOST \
     -e APP_DB_USER=$DB_USER \
     -e APP_DB_PASSWORD=$DB_PASSWORD \

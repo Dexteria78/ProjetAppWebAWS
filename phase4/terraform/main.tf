@@ -6,6 +6,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.0"
+    }
   }
   required_version = ">= 1.0"
   
@@ -77,6 +81,41 @@ resource "aws_ecr_lifecycle_policy" "student_records_app" {
       }
     }]
   })
+}
+
+# Null resource pour build et push l'image Docker automatiquement
+resource "null_resource" "docker_build_push" {
+  depends_on = [aws_ecr_repository.student_records_app]
+
+  triggers = {
+    # Reconstruire si les fichiers de l'application changent
+    docker_file = filemd5("${path.module}/../Dockerfile")
+    package_json = filemd5("${path.module}/../resources/codebase_partner/package.json")
+    # Force rebuild à chaque apply pour s'assurer que l'image est à jour
+    always_run = timestamp()
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Building and pushing Docker image to ECR..."
+      
+      # Se connecter à ECR
+      aws ecr get-login-password --region ${var.aws_region} | \
+        docker login --username AWS --password-stdin ${aws_ecr_repository.student_records_app.repository_url}
+      
+      # Build l'image
+      cd ${path.module}/..
+      docker build -t student-records-app:latest .
+      
+      # Tag l'image
+      docker tag student-records-app:latest ${aws_ecr_repository.student_records_app.repository_url}:latest
+      
+      # Push vers ECR
+      docker push ${aws_ecr_repository.student_records_app.repository_url}:latest
+      
+      echo "Docker image pushed successfully!"
+    EOT
+  }
 }
 
 # Security Group pour l'instance EC2
@@ -251,6 +290,12 @@ data "aws_ami" "amazon_linux_2023" {
 
 # EC2 Instance avec Docker
 resource "aws_instance" "docker_host" {
+  depends_on = [
+    aws_db_instance.mysql,
+    aws_secretsmanager_secret_version.db_credentials,
+    null_resource.docker_build_push
+  ]
+
   ami                    = data.aws_ami.amazon_linux_2023.id
   instance_type          = var.instance_type
   subnet_id              = data.aws_subnets.default.ids[0]
