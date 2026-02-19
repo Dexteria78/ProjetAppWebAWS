@@ -34,18 +34,18 @@ COPY --chown=nodejs:nodejs resources/codebase_partner/ ./
 
 # Variables d'environnement par défaut (peuvent être override au runtime)
 ENV NODE_ENV=production
-ENV APP_PORT=80
+ENV APP_PORT=3000
 ENV APP_DB_HOST=localhost
 ENV APP_DB_USER=admin
 ENV APP_DB_PASSWORD=changeme
 ENV APP_DB_NAME=STUDENTS
 
 # Exposer le port de l'application
-EXPOSE 80
+EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:80/', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+    CMD node -e "require('http').get('http://localhost:3000/', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Passer à l'utilisateur non-root
 USER nodejs
