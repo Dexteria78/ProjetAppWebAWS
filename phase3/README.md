@@ -16,44 +16,7 @@ Implémenter une architecture hautement disponible et scalable avec un VPC dédi
 
 ## 🏗️ Architecture
 
-```
-                         Internet
-                             │
-"ecr_repository_url" output {
-                    │ Internet Gateway │
-                    └────────┬────────┘
-                             │
-"ecr_repository_url" output {
-              │         VPC (10.0.0.0/16)   │
-              │                             │
-  │              │  ┌──────────┐ ┌─
-              │  │ Public   │ │ Public   │  │
-              │  │ Subnet 1 │ │ Subnet 2 │  │
-              │  │10.0.1.0  │10.0.4.0 │  │  
-              │  │(us-1a)   │ │(us-1b)   │  │
-              │  └────┬─────┘ └────┬─────┘  │
-              │       │   ALB       │        │
-              │       └─────┬───────┘        │
-              │             │                │
-              │      ┌──────▼──────┐         │
-              │      │Auto Scaling │         │
-Group (2-5)  │         │              │      
-              │      │EC2 instances│         │
-         │              │      └─────
-              │             │                │
-     │              │  ┌──────────▼────
-              │  │  Secrets Manager    │     │
-     │              │  └──────────┬──────────
-              │             │                │
-              │  ┌──────────▼──────────┐     
-              │  │ Private  │ Private  │     │
-              │  │ Subnet 1 │ Subnet 2 │     │
-              │  │10.0.2.0  │10.0.3.0  │     │
-              │  │(us-1a)   │(us-1b)   │     │
-              │  │  RDS MySQL (db.t3)  │     │
-              │  └─────────────────────┘     │
-              └─
-```
+![Architecture Phase 3](architecture-phase3.png)
 
 ## 📦 Composants Déployés
 
@@ -280,6 +243,11 @@ terraform destroy -auto-approve
 - Conteneurisation de l'application avec Docker
 - Stockage de l'image sur Amazon ECR
 - Déploiement du container sur EC2
+
+## 🎥 Vidéos de démonstration
+
+Les vidéos de déploiement et de test sont disponibles sur **MyDrive** :
+[https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing](https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing)
 
 ## 🔗 Références
 

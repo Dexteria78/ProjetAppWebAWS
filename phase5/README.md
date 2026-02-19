@@ -363,6 +363,11 @@ Pour valider cette phase :
 
 ---
 
+## 🎥 Vidéos de démonstration
+
+Les vidéos de déploiement et de test sont disponibles sur **MyDrive** :
+[https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing](https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing)
+
 **Phase 5 complète** : Pipeline CI/CD avec GitHub Actions ✓
 
 <- Cloud9 environment for database Pipeline CI/CD activé le 2026-02-18 14:19:37 -->

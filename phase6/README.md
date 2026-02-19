@@ -517,6 +517,11 @@ Pour valider cette phase :
 
 ---
 
+## 🎥 Vidéos de démonstration
+
+Les vidéos de déploiement et de test sont disponibles sur **MyDrive** :
+[https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing](https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing)
+
 **Phase 6 complète** : High Availability & Auto-Scaling ✓
 
 **Architecture :** Multi-AZ, Auto-scaling, Monitoring complet

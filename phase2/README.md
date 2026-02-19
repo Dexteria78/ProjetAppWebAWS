@@ -22,6 +22,8 @@ Cette phase représente l'évolution de l'architecture monolithique de Phase 1 v
 
 ## Architecture
 
+![Architecture Phase 2](architecture-phase2.png)
+
 ### Composants principaux
 
 - **VPC** : Réseau virtuel isolé (10.0.0.0/16)
@@ -241,8 +243,8 @@ terraform destroy -auto-approve
 
 ## Vidéos de démonstration
 
-Les vidéos de déploiement et de test sont disponibles sur MyDrive :
-https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing
+Les vidéos de déploiement et de test sont disponibles sur **MyDrive** :
+[https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing](https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing)
 
 ## Prochaines étapes (Phase 3)
 
