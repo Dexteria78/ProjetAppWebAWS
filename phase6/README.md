@@ -25,44 +25,7 @@ Cette phase implémente une **architecture hautement disponible et auto-scalable
 
 ## Architecture
 
-```
-                    
-                       Internet      
-                    
-                             
-                    
-                      Application    
-                      Load Balancer   (Multi-AZ)
-                    
-                             
-        
-                                                
-                     
-      EC2               EC2               EC2   
-    (AZ-1)            (AZ-2)            (AZ-3)  
-    Docker            Docker            Docker  
-                     
-                                              
-        
-                            
-                   
-                      RDS MySQL     
-                      Multi-AZ      
-                     (Primary+      
-                      Standby)      
-                   
-                            
-                   
-                    Secrets Manager 
-                    (DB Credentials)
-                   
-
-        
-              CloudWatch Monitoring       
-          • Metrics  • Alarms             
-          • Dashboard  • Auto Scaling     
-        
-```
+![Architecture Phase 6](phase6.png)
 
 ## Fonctionnalités
 
