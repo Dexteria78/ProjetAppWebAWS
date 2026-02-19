@@ -249,7 +249,7 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
   secret_string = jsonencode({
     username = aws_db_instance.mysql.username
     password = random_password.db_password.result
-    host     = aws_db_instance.mysql.endpoint
+    host     = aws_db_instance.mysql.address
     database = aws_db_instance.mysql.db_name
   })
 }
