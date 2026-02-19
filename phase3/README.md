@@ -16,7 +16,7 @@ Implémenter une architecture hautement disponible et scalable avec un VPC dédi
 
 ## Architecture
 
-![Architecture Phase 3](architecture-phase3.png)
+![Architecture Phase 3](phase3bis.png)
 
 ## Composants Déployés
 
