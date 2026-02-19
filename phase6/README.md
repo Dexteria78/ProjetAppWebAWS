@@ -25,7 +25,7 @@ Cette phase implémente une **architecture hautement disponible et auto-scalable
 
 ## Architecture
 
-![Architecture Phase 6](phase6.png)
+![Architecture Phase 6](terraform/phase6.png)
 
 ## Fonctionnalités
 
