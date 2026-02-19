@@ -36,6 +36,7 @@ Le développement de la solution est réalisé en 6 phases progressives, permett
 ## AMELIORATION PHASE 7
 
 -Création de la phase6 depuis une pipeline avec Terraform
+-Création d'un becket s3 de state terraform
 -Création d'un service d'authentification Keycloak, accèes via DNS LB
 ---
 
