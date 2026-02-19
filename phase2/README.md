@@ -22,7 +22,7 @@ Cette phase représente l'évolution de l'architecture monolithique de Phase 1 v
 
 ## Architecture
 
-![Architecture Phase 2](architecture-phase2.png)
+![Architecture Phase 2](phase2.png)
 
 ### Composants principaux
 
