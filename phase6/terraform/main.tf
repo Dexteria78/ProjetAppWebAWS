@@ -275,7 +275,7 @@ resource "aws_lb" "app" {
 }
 
 resource "aws_lb_target_group" "app" {
-  name        = "${var.app_name}-tg"
+  name_prefix = "${var.app_name}-tg-"
   port        = 3000
   protocol    = "HTTP"
   vpc_id      = data.aws_vpc.default.id
