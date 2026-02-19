@@ -18,6 +18,39 @@ Créer une application web fonctionnelle qui fonctionne sur une seule machine vi
 
 ### Architecture
 
+> **Phase 1 – Architecture de base**
+> 1 VPC · 1 Sous-réseau public · 1 EC2 (App + DB) · 1 Internet Gateway
+
+```
+                         AWS Cloud – Région AWS (us-east-1)
+        ┌────────────────────────────────────────────────────────┐
+        │               VPC (10.0.0.0/16)                       │
+        │  ┌─────────────────────────────────────────────────┐  │
+        │  │        Sous-réseau public (10.0.1.0/24)         │  │
+        │  │                                                  │  │
+        │  │   ┌─────────────────────────────────────────┐   │  │
+        │  │   │         Instance EC2 (Ubuntu)            │   │  │
+        │  │   │    t2.micro – IP publique: xx.xx.xx.xx  │   │  │
+        │  │   │                                         │   │  │
+        │  │   │  ┌─────────────────────────────────┐   │   │  │
+        │  │   │  │     Security Group              │   │   │  │
+        │  │   │  │  Port 22  (SSH)   – Admin       │   │   │  │
+        │  │   │  │  Port 80  (HTTP)  – 0.0.0.0/0  │   │   │  │
+        │  │   │  │  Port 3306 (MySQL) – Localhost  │   │   │  │
+        │  │   │  └─────────────────────────────────┘   │   │  │
+        │  │   │                                         │   │  │
+        │  │   │   Node.js App (port 80)                 │   │  │
+        │  │   │   MySQL DB    (port 3306 - local)       │   │  │
+        │  │   └─────────────────────────────────────────┘   │  │
+        │  │                    │                             │  │
+        │  │     Table de routage: 0.0.0.0/0 → IGW           │  │
+        │  └────────────────────┼─────────────────────────────┘  │
+        │                       │ Internet Gateway (igw-xxx)     │
+        └───────────────────────┼────────────────────────────────┘
+                                │ HTTP (port 80)
+                          Utilisateurs / Internet
+```
+
 La Phase 1 déploie une architecture simple avec tous les composants sur une seule instance EC2 :
 
 - **VPC** : Réseau virtuel privé (10.0.0.0/16)
@@ -25,8 +58,8 @@ La Phase 1 déploie une architecture simple avec tous les composants sur une seu
 - **Internet Gateway** : Pour l'accès Internet
 - **Instance EC2** : t2.micro Ubuntu 22.04
   - Application Node.js + Express (port 80)
-  - Base de données MySQL locale
-- **Security Group** : Règles de pare-feu (HTTP:80, SSH:22, MySQL:3306)
+  - Base de données MySQL locale (port 3306 - localhost uniquement)
+- **Security Group** : Règles de pare-feu (HTTP:80, SSH:22, MySQL:3306 local)
 
 ### Fichiers Terraform
 
