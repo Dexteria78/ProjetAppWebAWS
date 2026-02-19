@@ -398,6 +398,10 @@ resource "aws_ecs_task_definition" "app" {
       {
         name  = "SECRET_ARN"
         value = aws_secretsmanager_secret.db_credentials.arn
+      },
+      {
+        name  = "SECRET_NAME"
+        value = aws_secretsmanager_secret.db_credentials.name
       }
     ]
 

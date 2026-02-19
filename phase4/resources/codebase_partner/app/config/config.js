@@ -8,20 +8,21 @@ let config = {
 
 var AWS = require('aws-sdk');
 var client = new AWS.SecretsManager({
-    region: "us-east-1"
+    region: process.env.AWS_REGION || "us-east-1"
 });
 
-const secretName = "Mydbsecret";
+const secretName = process.env.SECRET_NAME || "Mydbsecret";
 
 //let APP_DB_USER;
 
 client.getSecretValue({SecretId: secretName}, function(err, data) {
     if (err) {
-      config.APP_DB_HOST = "localhost"
-      config.APP_DB_NAME = "STUDENTS"
-      config.APP_DB_PASSWORD = "student12"
-      config.APP_DB_USER = "nodeapp"
+      config.APP_DB_HOST = process.env.APP_DB_HOST || "localhost"
+      config.APP_DB_NAME = process.env.APP_DB_NAME || "STUDENTS"
+      config.APP_DB_PASSWORD = process.env.APP_DB_PASSWORD || "student12"
+      config.APP_DB_USER = process.env.APP_DB_USER || "nodeapp"
       console.log('Secrets not found. Proceeding with default values..')
+      console.log('Error:', err.message);
           //  throw err;
     }
     else {
@@ -31,13 +32,13 @@ client.getSecretValue({SecretId: secretName}, function(err, data) {
                 process.env[envKey] = secret[envKey];
               //  console.log(` Value for key '${envKey}' `);
               //  console.log(` secret[envKey] '${secret[envKey]}'`);
-                if (envKey == 'user') {
+                if (envKey == 'username' || envKey == 'user') {
                   config.APP_DB_USER = secret[envKey]
                 } else if (envKey == 'password') {
                   config.APP_DB_PASSWORD = secret[envKey]
                 } else if (envKey == 'host') {
                   config.APP_DB_HOST = secret[envKey]
-                } else if (envKey == 'db') {
+                } else if (envKey == 'database' || envKey == 'db') {
                   config.APP_DB_NAME= secret[envKey]
                 }
         }
