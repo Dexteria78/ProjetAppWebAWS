@@ -247,12 +247,6 @@ jobs:
           echo "ECS_CLUSTER=$ECS_CLUSTER" >> $GITHUB_ENV
           echo "ECS_SERVICE=$ECS_SERVICE" >> $GITHUB_ENV
 
-      - name: Wait for ECS Service Stability
-        run: |
-          echo "Waiting for ECS service to stabilize..."
-          aws ecs wait services-stable --cluster ${{ env.ECS_CLUSTER }} --services ${{ env.ECS_SERVICE }}
-          echo "✓ ECS service is stable"
-
       - name: Verify deployment
         run: |
           echo "Deployment completed successfully!"
