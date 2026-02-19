@@ -2,6 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors")
 const supplier = require("./app/controller/supplier.controller");
+const { initDatabase } = require("./app/db-init");
 const app = express();
 const mustacheExpress = require("mustache-express")
 const favicon = require('serve-favicon');
