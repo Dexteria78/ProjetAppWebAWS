@@ -1,6 +1,22 @@
-# Phase 5 : Pipeline CI/CD
+# Phase 5 : Mise en Place d'une Pipeline CI/CD
 
-## 📋 Vue d'ensemble
+## 📋 Objectif
+
+Automatiser le déploiement de l'application avec une pipeline CI/CD complète.
+
+## 🎯 Exigences Phase 5
+
+- ✅ Configurer un **GitLab CI/CD**, **GitHub Actions** ou **AWS CodePipeline**
+- ✅ Définir les étapes suivantes :
+  - **Build** de l'application
+  - **Test de qualité** (linting, tests unitaires)
+  - **Packaging et push de l'image Docker**
+  - **Test de charge**
+  - **Déploiement sur l'environnement de production**
+
+---
+
+## 📋 Vue d'ensemble Détaillée
 
 Cette phase implémente un pipeline CI/CD complet avec **GitHub Actions** pour automatiser le build, les tests, le packaging et le déploiement de l'application Student Records.
 

@@ -1,6 +1,20 @@
-# Phase 6 : High Availability & Auto-Scaling
+# Phase 6 : Ajout d'un Orchestrateur de Conteneurs
 
-## 📋 Vue d'ensemble
+## 📋 Objectif
+
+Passer à un déploiement avec un orchestrateur de conteneurs pour une gestion avancée et une haute disponibilité.
+
+## 🎯 Exigences Phase 6
+
+- ✅ Déployer l'application sur **Amazon ECS** (EC2), **Amazon EKS** (Kubernetes) ou utiliser un autre orchestrateur
+- ✅ Configurer l'orchestration des conteneurs pour la haute disponibilité
+- ✅ Implémenter l'auto-scaling avec l'orchestrateur
+- ✅ Intégrer avec Application Load Balancer
+- ✅ Mettre en place le monitoring et les alertes
+
+---
+
+## 📋 Vue d'ensemble Détaillée
 
 Cette phase implémente une **architecture hautement disponible et auto-scalable** pour l'application Student Records avec :
 - **Application Load Balancer (ALB)** multi-AZ

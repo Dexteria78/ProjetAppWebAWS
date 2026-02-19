@@ -1,4 +1,20 @@
-# Phase 2 - Application Découplée avec RDS et Secrets Manager
+# Phase 2 - Découplage des Composants de l'Application
+
+## 📋 Objectif
+
+Séparer la base de données et l'infrastructure du serveur web de manière à ce qu'elles fonctionnent indépendamment l'une de l'autre. L'application web doit être exécutée sur une machine virtuelle distincte et la base de données doit être exécutée sur l'infrastructure de services gérés (RDS).
+
+## 🎯 Exigences Phase 2
+
+- ✅ Mettre à jour ou recréer les composants du réseau virtuel nécessaires à l'hébergement de la base de données séparément de l'application
+- ✅ Créer une base de données Amazon RDS exécutant un moteur MySQL
+- ✅ Mettre en service un environnement AWS Cloud9 pour exécuter les commandes AWS CLI
+- ✅ Utiliser AWS Secrets Manager pour créer un secret afin de stocker les informations d'identification de la base de données
+- ✅ Créer une nouvelle machine virtuelle pour héberger l'application web
+- ✅ Migrer les données de la base de données d'origine (EC2) vers la nouvelle base de données Amazon RDS
+- ✅ Tester l'application (consulter, ajouter, supprimer et modifier les dossiers des étudiants)
+
+---
 
 ## Vue d'ensemble du projet
 

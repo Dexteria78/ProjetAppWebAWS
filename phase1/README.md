@@ -1,10 +1,16 @@
-# Projet Application Web de Gestion d'Étudiants sur AWS
+# Phase 1 - Application Web Fonctionnelle de Base
 
-## 📋 But du Projet
+## 📋 Objectif
 
-Ce projet consiste à déployer et faire évoluer une application web de gestion d'enregistrements d'étudiants sur AWS en utilisant Terraform. L'application permet de visualiser, ajouter, modifier et supprimer des informations d'étudiants stockées dans une base de données.
+Créer une application web fonctionnelle qui fonctionne sur une seule machine virtuelle dans un réseau virtuel. À la fin de cette phase, vous disposerez d'un POC (Proof of Concept) démontrant l'hébergement de l'application sur le Cloud AWS.
 
-Le projet est divisé en plusieurs phases progressives, chacune ajoutant des fonctionnalités et améliorant l'architecture pour atteindre une solution hautement disponible, sécurisée et automatisée.
+## 🎯 Exigences Phase 1
+
+- ✅ Créer un réseau virtuel (VPC) pour héberger l'application web
+- ✅ Installer l'application web et la base de données MySQL sur une instance EC2
+- ✅ Utiliser le code JavaScript fourni pour le déploiement
+- ✅ Tester l'application pour s'assurer qu'elle est accessible depuis Internet
+- ✅ Effectuer des tâches : affichage, ajout, suppression, modification d'enregistrements
 
 ---
 

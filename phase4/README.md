@@ -1,6 +1,19 @@
-# Phase 4 - Packaging de l'Application avec Docker
+# Phase 4 - Packaging de l'Application
 
-## 🎯 Objectif
+## 📋 Objectif
+
+Préparer l'application pour être facilement déployable en la conteneurisant avec Docker.
+
+## 🎯 Exigences Phase 4
+
+- ✅ Créer un **Dockerfile** pour conteneuriser l'application
+- ✅ Stocker l'image sur **Amazon Elastic Container Registry (ECR)** ou une autre registry
+- ✅ Tester l'exécution du package localement
+- ✅ Tester le déploiement sur une instance EC2
+
+---
+
+## 🎯 Objectif Original
 
 Conteneuriser l'application de gestion des étudiants avec Docker et stocker l'image sur Amazon ECR.
 
