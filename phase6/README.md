@@ -1,20 +1,20 @@
 # Phase 6 : Ajout d'un Orchestrateur de Conteneurs
 
-## 📋 Objectif
+## Objectif
 
 Passer à un déploiement avec un orchestrateur de conteneurs pour une gestion avancée et une haute disponibilité.
 
-## 🎯 Exigences Phase 6
+## Exigences Phase 6
 
-- ✅ Déployer l'application sur **Amazon ECS** (EC2), **Amazon EKS** (Kubernetes) ou utiliser un autre orchestrateur
-- ✅ Configurer l'orchestration des conteneurs pour la haute disponibilité
-- ✅ Implémenter l'auto-scaling avec l'orchestrateur
-- ✅ Intégrer avec Application Load Balancer
-- ✅ Mettre en place le monitoring et les alertes
+- Déployer l'application sur **Amazon ECS** (EC2), **Amazon EKS** (Kubernetes) ou utiliser un autre orchestrateur
+- Configurer l'orchestration des conteneurs pour la haute disponibilité
+- Implémenter l'auto-scaling avec l'orchestrateur
+- Intégrer avec Application Load Balancer
+- Mettre en place le monitoring et les alertes
 
 ---
 
-## 📋 Vue d'ensemble Détaillée
+## Vue d'ensemble Détaillée
 
 Cette phase implémente une **architecture hautement disponible et auto-scalable** pour l'application Student Records avec :
 - **Application Load Balancer (ALB)** multi-AZ
@@ -23,68 +23,68 @@ Cette phase implémente une **architecture hautement disponible et auto-scalable
 - **CloudWatch** monitoring et alertes
 - **Target Tracking** et scaling policies avancées
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-                    ┌─────────────────┐
-                    │   Internet      │
-                    └────────┬────────┘
-                             │
-                    ┌────────▼────────┐
-                    │  Application    │
-                    │  Load Balancer  │ (Multi-AZ)
-                    └────────┬────────┘
-                             │
-        ┌────────────────────┼────────────────────┐
-        │                    │                    │
-   ┌────▼────┐         ┌────▼────┐         ┌────▼────┐
-   │   EC2   │         │   EC2   │         │   EC2   │
-   │ (AZ-1)  │         │ (AZ-2)  │         │ (AZ-3)  │
-   │ Docker  │         │ Docker  │         │ Docker  │
-   └────┬────┘         └────┬────┘         └────┬────┘
-        │                   │                   │
-        └───────────────────┼───────────────────┘
-                            │
-                   ┌────────▼────────┐
-                   │   RDS MySQL     │
-                   │   Multi-AZ      │
-                   │  (Primary+      │
-                   │   Standby)      │
-                   └─────────────────┘
-                            │
-                   ┌────────▼────────┐
-                   │ Secrets Manager │
-                   │ (DB Credentials)│
-                   └─────────────────┘
+                    
+                       Internet      
+                    
+                             
+                    
+                      Application    
+                      Load Balancer   (Multi-AZ)
+                    
+                             
+        
+                                                
+                     
+      EC2               EC2               EC2   
+    (AZ-1)            (AZ-2)            (AZ-3)  
+    Docker            Docker            Docker  
+                     
+                                              
+        
+                            
+                   
+                      RDS MySQL     
+                      Multi-AZ      
+                     (Primary+      
+                      Standby)      
+                   
+                            
+                   
+                    Secrets Manager 
+                    (DB Credentials)
+                   
 
-        ┌──────────────────────────────────┐
-        │      CloudWatch Monitoring       │
-        │  • Metrics  • Alarms             │
-        │  • Dashboard  • Auto Scaling     │
-        └──────────────────────────────────┘
+        
+              CloudWatch Monitoring       
+          • Metrics  • Alarms             
+          • Dashboard  • Auto Scaling     
+        
 ```
 
-## ✨ Fonctionnalités
+## Fonctionnalités
 
 ### High Availability (HA)
-- ✅ **Multi-AZ RDS** : Réplication synchrone avec failover automatique
-- ✅ **ALB Multi-AZ** : Distribution du trafic sur plusieurs zones
-- ✅ **Auto Healing** : Remplacement automatique des instances défaillantes
-- ✅ **Health Checks** : Détection proactive des problèmes
+- **Multi-AZ RDS** : Réplication synchrone avec failover automatique
+- **ALB Multi-AZ** : Distribution du trafic sur plusieurs zones
+- **Auto Healing** : Remplacement automatique des instances défaillantes
+- **Health Checks** : Détection proactive des problèmes
 
 ### Auto-Scaling
-- ✅ **Min/Max Instances** : 2-4 instances configurables
-- ✅ **CPU-based Scaling** : Scale up > 70%, scale down < 30%
-- ✅ **Target Tracking** : Maintient 50% CPU automatiquement
-- ✅ **Cooldown Period** : 5 minutes entre chaque scaling
+- **Min/Max Instances** : 2-4 instances configurables
+- **CPU-based Scaling** : Scale up > 70%, scale down < 30%
+- **Target Tracking** : Maintient 50% CPU automatiquement
+- **Cooldown Period** : 5 minutes entre chaque scaling
 
 ### Monitoring & Alertes
-- ✅ **CloudWatch Dashboard** : Vue complète (ALB, ASG, RDS)
-- ✅ **Alarmes CPU** : Notifications sur seuils critiques
-- ✅ **Unhealthy Hosts** : Alerte si instances malsaines
-- ✅ **RDS Monitoring** : CPU, connexions, mémoire
+- **CloudWatch Dashboard** : Vue complète (ALB, ASG, RDS)
+- **Alarmes CPU** : Notifications sur seuils critiques
+- **Unhealthy Hosts** : Alerte si instances malsaines
+- **RDS Monitoring** : CPU, connexions, mémoire
 
-## 🚀 Déploiement
+## Déploiement
 
 ### 1. Prérequis
 
@@ -137,7 +137,7 @@ terraform apply -auto-approve
 ### 4. Attendre le déploiement complet
 
 ```
-⏱️  Temps estimé : 12-15 minutes
+⏱  Temps estimé : 12-15 minutes
   - RDS Multi-AZ : ~10 min
   - ALB + Target Group : ~2 min
   - ASG + Instances : ~3 min
@@ -167,7 +167,7 @@ aws autoscaling describe-auto-scaling-groups \
   --output table
 ```
 
-## 📊 Configuration Auto-Scaling
+## Configuration Auto-Scaling
 
 ### Configuration par défaut
 
@@ -221,7 +221,7 @@ Appliquer les changements :
 terraform apply -auto-approve
 ```
 
-## 🧪 Tests de Charge
+## Tests de Charge
 
 ### Test 1 : Load test basique
 
@@ -287,7 +287,7 @@ watch -n 5 'aws autoscaling describe-auto-scaling-groups \
 
 **Résultat attendu :** ASG lance automatiquement une nouvelle instance en ~3 minutes
 
-## 📈 Monitoring CloudWatch
+## Monitoring CloudWatch
 
 ### Accéder au Dashboard
 
@@ -343,7 +343,7 @@ aws cloudwatch put-metric-alarm \
   --comparison-operator GreaterThanThreshold
 ```
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### Problème : Instances unhealthy
 
@@ -436,9 +436,9 @@ aws autoscaling start-instance-refresh \
   --auto-scaling-group-name student-records-asg-phase6
 ```
 
-## 🎓 Learnings
+## Learnings
 
-### ✅ Ce qui fonctionne bien
+### Ce qui fonctionne bien
 
 1. **Multi-AZ RDS** : Failover transparent en ~90 secondes
 2. **Target Tracking** : Meilleur que simple scaling pour maintenir performance stable
@@ -446,7 +446,7 @@ aws autoscaling start-instance-refresh \
 4. **Auto Healing** : Remplacement automatique sans intervention manuelle
 5. **CloudWatch Dashboard** : Vue complète de l'infrastructure en temps réel
 
-### ⚠️ Points d'attention
+### Points d'attention
 
 1. **Coût** : Multi-AZ RDS = 2x le coût d'une instance single-AZ
 2. **Warmup Time** : Nouvelles instances prennent ~3 minutes à être prêtes
@@ -454,7 +454,7 @@ aws autoscaling start-instance-refresh \
 4. **Session Persistence** : Pas de sticky sessions (OK pour API stateless)
 5. **Scaling Delay** : 2 minutes d'évaluation + 5 minutes de cooldown
 
-### 🚀 Améliorations possibles
+### Améliorations possibles
 
 - **ElastiCache** : Ajouter Redis pour les sessions et cache
 - **CloudFront** : CDN pour les assets statiques
@@ -464,7 +464,7 @@ aws autoscaling start-instance-refresh \
 - **Custom Metrics** : Métriques applicatives dans CloudWatch
 - **SNS Notifications** : Alertes par email/SMS sur alarmes
 
-## 📦 Nettoyage
+## Nettoyage
 
 Pour détruire toute l'infrastructure :
 
@@ -477,7 +477,7 @@ terraform destroy -auto-approve
 
 **Durée :** ~10 minutes (RDS prend du temps)
 
-## 📚 Résumé des commandes
+## Résumé des commandes
 
 ```bash
 # Déploiement
@@ -502,27 +502,27 @@ aws autoscaling set-desired-capacity \
 terraform destroy -auto-approve
 ```
 
-## 🎯 Validation
+## Validation
 
 Pour valider cette phase :
 
-1. ✅ ALB accessible et distribue le trafic
-2. ✅ Au moins 2 instances running dans différentes AZ
-3. ✅ RDS Multi-AZ activé (standby replica)
-4. ✅ Health checks passent (target group healthy)
-5. ✅ Auto-scaling fonctionne (scale up/down sur charge CPU)
-6. ✅ Dashboard CloudWatch affiche les métriques
-7. ✅ Application répond sur ALB DNS
-8. ✅ Failover RDS fonctionne (test optionnel)
+1. ALB accessible et distribue le trafic
+2. Au moins 2 instances running dans différentes AZ
+3. RDS Multi-AZ activé (standby replica)
+4. Health checks passent (target group healthy)
+5. Auto-scaling fonctionne (scale up/down sur charge CPU)
+6. Dashboard CloudWatch affiche les métriques
+7. Application répond sur ALB DNS
+8. Failover RDS fonctionne (test optionnel)
 
 ---
 
-## 🎥 Vidéos de démonstration
+## Vidéos de démonstration
 
 Les vidéos de déploiement et de test sont disponibles sur **MyDrive** :
 [https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing](https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing)
 
-**Phase 6 complète** : High Availability & Auto-Scaling ✓
+**Phase 6 complète** : High Availability & Auto-Scaling 
 
 **Architecture :** Multi-AZ, Auto-scaling, Monitoring complet
 **Capacité :** 2-4 instances, RDS Multi-AZ, ALB multi-zones

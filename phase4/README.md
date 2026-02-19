@@ -1,23 +1,23 @@
 # Phase 4 - Packaging de l'Application
 
-## 📋 Objectif
+## Objectif
 
 Préparer l'application pour être facilement déployable en la conteneurisant avec Docker.
 
-## 🎯 Exigences Phase 4
+## Exigences Phase 4
 
-- ✅ Créer un **Dockerfile** pour conteneuriser l'application
-- ✅ Stocker l'image sur **Amazon Elastic Container Registry (ECR)** ou une autre registry
-- ✅ Tester l'exécution du package localement
-- ✅ Tester le déploiement sur une instance EC2
+- Créer un **Dockerfile** pour conteneuriser l'application
+- Stocker l'image sur **Amazon Elastic Container Registry (ECR)** ou une autre registry
+- Tester l'exécution du package localement
+- Tester le déploiement sur une instance EC2
 
 ---
 
-## 🎯 Objectif Original
+## Objectif Original
 
 Conteneuriser l'application de gestion des étudiants avec Docker et stocker l'image sur Amazon ECR.
 
-## ✅ Résultat
+## Résultat
 
 **Application déployée et fonctionnelle** : http://3.81.207.57
 - Image Docker optimisée : 134MB (Node.js 18-alpine)
@@ -25,37 +25,37 @@ Conteneuriser l'application de gestion des étudiants avec Docker et stocker l'i
 - Base de données initialisée automatiquement avec 3 étudiants
 - Infrastructure entièrement automatisée (destroy + apply = tout fonctionne)
 
-## 🏗️ Architecture Phase 4
+## Architecture Phase 4
 
 ![Architecture Phase 4](architecture-phase4.png)
 
-## 📦 Livrables Phase 4
+## Livrables Phase 4
 
 ### 1. Dockerfile (Multi-stage Build)
-✅ **Stage 1 (base)** : Node.js 18-alpine avec workdir setup  
-✅ **Stage 2 (dependencies)** : Installation des dépendances (npm ci)  
-✅ **Stage 3 (release)** : Image finale optimisée
+ **Stage 1 (base)** : Node.js 18-alpine avec workdir setup  
+ **Stage 2 (dependencies)** : Installation des dépendances (npm ci)  
+ **Stage 3 (release)** : Image finale optimisée
 - Utilisateur non-root (nodejs:1001)
 - Health check intégré (interval 30s)
 - Variables d'environnement configurables
 - Taille finale : **134MB** (vs ~500MB image Node standard)
 
 ### 2. Infrastructure Terraform
-✅ **ECR Repository** avec scan d'images et lifecycle policy  
-✅ **RDS MySQL 8.0** (db.t3.micro) avec stockage chiffré  
-✅ **EC2 Instance** (t3.small) avec Docker pré-installé  
-✅ **Security Groups** pour EC2 (HTTP/SSH) et RDS (MySQL)  
-✅ **Secrets Manager** pour les credentials de la base  
-✅ **IAM Role** (LabRole) avec permissions ECR et Secrets Manager  
-✅ **Userdata automatisé** : installation Docker, init DB, démarrage container
+ **ECR Repository** avec scan d'images et lifecycle policy  
+ **RDS MySQL 8.0** (db.t3.micro) avec stockage chiffré  
+ **EC2 Instance** (t3.small) avec Docker pré-installé  
+ **Security Groups** pour EC2 (HTTP/SSH) et RDS (MySQL)  
+ **Secrets Manager** pour les credentials de la base  
+ **IAM Role** (LabRole) avec permissions ECR et Secrets Manager  
+ **Userdata automatisé** : installation Docker, init DB, démarrage container
 
 ### 3. Automatisation Complète
-✅ **Initialisation DB automatique** via userdata  
-✅ **Pull image depuis ECR** automatique au démarrage  
-✅ **Health checks** pour vérifier l'état du container  
-✅ **Infrastructure as Code** : destroy + apply = tout fonctionne
+ **Initialisation DB automatique** via userdata  
+ **Pull image depuis ECR** automatique au démarrage  
+ **Health checks** pour vérifier l'état du container  
+ **Infrastructure as Code** : destroy + apply = tout fonctionne
 
-## 🚀 Déploiement
+## Déploiement
 
 ### 1. Build et push de l'image vers ECR
 
@@ -120,49 +120,49 @@ curl http://localhost:80/students
 docker-compose down -v
 ```
 
-## ✅ Vérifications et Tests
+## Vérifications et Tests
 
 | Test | Status | Résultat |
 |------|--------|----------|
-| Build image Docker | ✅ | 134MB (optimisé avec Alpine) |
-| Test local docker-compose | ✅ | Application démarre et se connecte à MySQL |
-| Push vers ECR | ✅ | Image disponible dans le registry |
-| Infrastructure Terraform | ✅ | 13 ressources créées |
-| Initialisation DB automatique | ✅ | Table `students` créée avec 3 enregistrements |
-| Container running sur EC2 | ✅ | Health check OK |
-| Application accessible | ✅ | http://3.81.207.57 |
-| Liste étudiants affichée | ✅ | Alice, Bob, Charlie visibles |
-| Destroy + Apply | ✅ | Infrastructure entièrement automatisée |
+| Build image Docker |  | 134MB (optimisé avec Alpine) |
+| Test local docker-compose |  | Application démarre et se connecte à MySQL |
+| Push vers ECR |  | Image disponible dans le registry |
+| Infrastructure Terraform |  | 13 ressources créées |
+| Initialisation DB automatique |  | Table `students` créée avec 3 enregistrements |
+| Container running sur EC2 |  | Health check OK |
+| Application accessible |  | http://3.81.207.57 |
+| Liste étudiants affichée |  | Alice, Bob, Charlie visibles |
+| Destroy + Apply |  | Infrastructure entièrement automatisée |
 
-## 📊 Ressources Créées
+## Ressources Créées
 
 ```
 13 resources created:
-├── ECR Repository (student-records-app)
-├── ECR Lifecycle Policy
-├── RDS MySQL Instance (db.t3.micro)
-├── RDS Subnet Group
-├── DB Secret (Secrets Manager)
-├── DB Secret Version
-├── Security Group - EC2
-├── Security Group - RDS
-├── EC2 Instance (t3.small)
-├── Data Source - VPC
-├── Data Source - Subnets
-├── Data Source - AMI
-└── Data Source - LabInstanceProfile
+ ECR Repository (student-records-app)
+ ECR Lifecycle Policy
+ RDS MySQL Instance (db.t3.micro)
+ RDS Subnet Group
+ DB Secret (Secrets Manager)
+ DB Secret Version
+ Security Group - EC2
+ Security Group - RDS
+ EC2 Instance (t3.small)
+ Data Source - VPC
+ Data Source - Subnets
+ Data Source - AMI
+ Data Source - LabInstanceProfile
 ```
 
-## 🔒 Sécurité
+## Sécurité
 
-- ✅ Container avec utilisateur non-root (nodejs:1001)
-- ✅ RDS avec stockage chiffré (gp3)
-- ✅ Credentials stockés dans Secrets Manager
-- ✅ Security Groups restrictifs (EC2 ↔ RDS uniquement)
-- ✅ ECR scan d'images activé
-- ✅ Health checks pour détection de pannes
+- Container avec utilisateur non-root (nodejs:1001)
+- RDS avec stockage chiffré (gp3)
+- Credentials stockés dans Secrets Manager
+- Security Groups restrictifs (EC2 ↔ RDS uniquement)
+- ECR scan d'images activé
+- Health checks pour détection de pannes
 
-## 📈 Optimisations
+## Optimisations
 
 - **Image Docker** : Multi-stage build → 134MB (vs 500MB+)
 - **Cache layers** : npm dependencies séparées
@@ -171,7 +171,7 @@ docker-compose down -v
 - **Userdata** : Installation et configuration automatiques
 - **Health checks** : Redémarrage automatique si échec
 
-## 🔄 Infrastructure as Code
+## Infrastructure as Code
 
 Le projet respecte le principe IaC :
 ```bash
@@ -184,7 +184,7 @@ terraform apply -auto-approve
 # Résultat: Application fonctionnelle en ~3 minutes
 ```
 
-## 📝 Learnings Phase 4
+## Learnings Phase 4
 
 1. **Multi-stage builds** réduisent drastiquement la taille des images
 2. **aws-sdk** doit être ajouté aux dépendances (non présent dans package.json initial)
@@ -194,7 +194,7 @@ terraform apply -auto-approve
 6. **Health checks Docker** assurent la haute disponibilité
 7. **ECR lifecycle policies** évitent l'accumulation d'images anciennes
 
-## ⏭️ Prochaines Étapes
+## ⏭ Prochaines Étapes
 
 Phase 5 : Pipeline CI/CD avec automatisation build/test/deploy
 
@@ -205,7 +205,7 @@ Phase 5 : Pipeline CI/CD avec automatisation build/test/deploy
 - Health check dans le Dockerfile
 - Tag de version
 
-## 🎥 Vidéos de démonstration
+## Vidéos de démonstration
 
 Les vidéos de déploiement et de test sont disponibles sur **MyDrive** :
 [https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing](https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing)

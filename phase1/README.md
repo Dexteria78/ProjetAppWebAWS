@@ -1,20 +1,20 @@
 # Phase 1 - Application Web Fonctionnelle de Base
 
-## 📋 Objectif
+## Objectif
 
 Créer une application web fonctionnelle qui fonctionne sur une seule machine virtuelle dans un réseau virtuel. À la fin de cette phase, vous disposerez d'un POC (Proof of Concept) démontrant l'hébergement de l'application sur le Cloud AWS.
 
-## 🎯 Exigences Phase 1
+## Exigences Phase 1
 
-- ✅ Créer un réseau virtuel (VPC) pour héberger l'application web
-- ✅ Installer l'application web et la base de données MySQL sur une instance EC2
-- ✅ Utiliser le code JavaScript fourni pour le déploiement
-- ✅ Tester l'application pour s'assurer qu'elle est accessible depuis Internet
-- ✅ Effectuer des tâches : affichage, ajout, suppression, modification d'enregistrements
+- Créer un réseau virtuel (VPC) pour héberger l'application web
+- Installer l'application web et la base de données MySQL sur une instance EC2
+- Utiliser le code JavaScript fourni pour le déploiement
+- Tester l'application pour s'assurer qu'elle est accessible depuis Internet
+- Effectuer des tâches : affichage, ajout, suppression, modification d'enregistrements
 
 ---
 
-## 🚀 Phase 1 - Infrastructure Monolithique
+## Phase 1 - Infrastructure Monolithique
 
 ### Architecture
 
@@ -44,7 +44,7 @@ userdata.sh          # Script d'installation automatique
 .gitignore
 ```
 
-#### 📄 Détail des fichiers de configuration
+#### Détail des fichiers de configuration
 
 **terraform.tf**
 - Définit la version minimale de Terraform (>= 1.2.0)
@@ -98,7 +98,7 @@ userdata.sh          # Script d'installation automatique
 - Création de la table `students`
 - Démarrage automatique de l'application sur le port 80
 
-### 🎥 Démonstrations Vidéo
+### Démonstrations Vidéo
 
 Les vidéos de démonstration sont disponibles sur **MyDrive** : [https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing](https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing)
 
@@ -111,10 +111,10 @@ Les vidéos de démonstration sont disponibles sur **MyDrive** : [https://drive.
 
 ### Fonctionnalités de l'Application
 
--  Liste de tous les étudiants
--  Ajout d'un nouvel étudiant
--  Modification des informations d'un étudiant
--  Suppression d'un étudiant
--  Interface web Bootstrap responsive
+- Liste de tous les étudiants
+- Ajout d'un nouvel étudiant
+- Modification des informations d'un étudiant
+- Suppression d'un étudiant
+- Interface web Bootstrap responsive
 
 ---

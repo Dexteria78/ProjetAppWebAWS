@@ -1,24 +1,24 @@
 # Phase 3 - Haute Disponibilité et Scalabilité
 
-## 📋 Objectif
+## Objectif
 
 Implémenter une architecture hautement disponible et scalable avec un VPC dédié, un Application Load Balancer et un Auto Scaling Group pour distribuer la charge sur plusieurs instances dans plusieurs zones de disponibilité.
 
-## 🎯 Exigences Phase 3
+## Exigences Phase 3
 
-- ✅ Lancer un équilibreur de charge (ALB)
-- ✅ Créer un Launch Template pour les instances EC2
-- ✅ Mettre en place un Auto Scaling Group multi-AZ
-- ✅ Tester l'application (affichage, ajout, suppression, modification)
-- ✅ Effectuer un test de charge pour vérifier le scaling automatique
+- Lancer un équilibreur de charge (ALB)
+- Créer un Launch Template pour les instances EC2
+- Mettre en place un Auto Scaling Group multi-AZ
+- Tester l'application (affichage, ajout, suppression, modification)
+- Effectuer un test de charge pour vérifier le scaling automatique
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ![Architecture Phase 3](architecture-phase3.png)
 
-## 📦 Composants Déployés
+## Composants Déployés
 
 ### VPC & Réseau
 | Ressource | Valeur |
@@ -80,7 +80,7 @@ Implémenter une architecture hautement disponible et scalable avec un VPC dédi
 - **AWS Secrets Manager** : `student-records-app-db-credentials-phase3`
 - **AWS Cloud9** : Environnement t3.small pour administration (auto-stop 30 min)
 
-## 🔧 Choix Techniques
+## Choix Techniques
 
 ### VPC dédié vs VPC par défaut
 Phase 3 crée un **VPC dédié** pour une isolation réseau complète :
@@ -99,7 +99,7 @@ Les instances EC2 sont dans les subnets publics pour simplifier le déploiement 
 ### RDS dans subnets privés
 La base de données est entièrement isolée dans des subnets privés sans accès Internet.
 
-## 📊 Fichiers Terraform
+## Fichiers Terraform
 
 ```
 phase3/
@@ -145,7 +145,7 @@ terraform output application_url
 - EC2 instances (via ASG) : ~3 minutes
 - **Total : ~12-15 minutes**
 
-## ✅ Tests Effectués
+## Tests Effectués
 
 ### Test fonctionnel
 ```bash
@@ -172,7 +172,7 @@ loadtest -c 100 -t 60 http://<ALB-DNS-NAME>/students
 # - CPU redescend, scale-in après cooldown
 ```
 
-## 🚧 Difficultés Rencontrées
+## Difficultés Rencontrées
 
 1. **Timing EC2 vs RDS**
    - **Problème** : Les instances EC2 démarraient avant que RDS soit disponible
@@ -190,7 +190,7 @@ loadtest -c 100 -t 60 http://<ALB-DNS-NAME>/students
    - **Problème** : Chevauchement initial entre subnets publics et privés
    - **Solution** : Plan CIDR précis (public: .1.x, .4.x / privé: .2.x, .3.x)
 
-## 📈 Métriques
+## Métriques
 
 | Métrique | Valeur |
 |----------|--------|
@@ -211,7 +211,7 @@ loadtest -c 100 -t 60 http://<ALB-DNS-NAME>/students
 | Cloud9 (30min/j) | ~$1 |
 | **Total** | **~$48/mois** |
 
-## 🔒 Sécurité
+## Sécurité
 
 ### Security Groups en cascade
 ```
@@ -232,7 +232,7 @@ Internet → ALB-SG (port 80)
 - JSON avec `username`, `password`, `host`, `dbname`
 - Récupéré dynamiquement au démarrage des instances
 
-## 🧹 Nettoyage
+## Nettoyage
 
 ```bash
 terraform destroy -auto-approve
@@ -244,12 +244,12 @@ terraform destroy -auto-approve
 - Stockage de l'image sur Amazon ECR
 - Déploiement du container sur EC2
 
-## 🎥 Vidéos de démonstration
+## Vidéos de démonstration
 
 Les vidéos de déploiement et de test sont disponibles sur **MyDrive** :
 [https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing](https://drive.google.com/drive/folders/1698wO-jPW8hJ28d3EpMSmLd9UDllHKDm?usp=sharing)
 
-## 🔗 Références
+## Références
 
 - [network.tf](network.tf) - VPC et subnets
 - [loadbalancer.tf](loadbalancer.tf) - ALB configuration
