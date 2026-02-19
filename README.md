@@ -31,3 +31,11 @@ La solution doit répondre aux exigences suivantes :
 Le développement de la solution est réalisé en 6 phases progressives, permettant de garantir que les fonctionnalités de base fonctionnent avant que l'architecture ne devienne plus complexe.
 
 ---
+
+
+## AMELIORATION PHASE 7
+
+-Création de la phase6 depuis une pipeline avec Terraform
+-Création d'un service d'authentification Keycloak, accèes via DNS LB
+---
+
