@@ -27,7 +27,7 @@ Conteneuriser l'application de gestion des étudiants avec Docker et stocker l'i
 
 ## Architecture Phase 4
 
-![Architecture Phase 4](architecture-phase4.png)
+![Architecture Phase 4](phase4.png)
 
 ## Livrables Phase 4
 
