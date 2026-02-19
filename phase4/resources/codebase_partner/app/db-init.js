@@ -1,21 +1,42 @@
 const mysql = require('mysql2/promise');
-const config = require('./config/config');
+const AWS = require('aws-sdk');
+
+async function getDbConfig() {
+    try {
+        const client = new AWS.SecretsManager({
+            region: process.env.AWS_REGION || "us-east-1"
+        });
+        
+        const secretName = process.env.SECRET_NAME || "student-records-ecs-db-credentials-phase6";
+        const data = await client.getSecretValue({SecretId: secretName}).promise();
+        const secret = JSON.parse(data.SecretString);
+        
+        return {
+            host: secret.host,
+            user: secret.username,
+            password: secret.password,
+            database: secret.database
+        };
+    } catch (error) {
+        return {
+            host: process.env.APP_DB_HOST || 'localhost',
+            user: process.env.APP_DB_USER || 'admin',
+            password: process.env.APP_DB_PASSWORD || 'adminpassword',
+            database: process.env.APP_DB_NAME || 'studentrecordsdb'
+        };
+    }
+}
 
 async function initDatabase() {
     try {
-        // Wait for config to be loaded (it's async via Secrets Manager)
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 3000));
         
-        const connection = await mysql.createConnection({
-            host: config.APP_DB_HOST,
-            user: config.APP_DB_USER,
-            password: config.APP_DB_PASSWORD,
-            database: config.APP_DB_NAME
-        });
-
+        const dbConfig = await getDbConfig();
+        console.log(`🔌 Connecting to database: ${dbConfig.host}/${dbConfig.database}`);
+        
+        const connection = await mysql.createConnection(dbConfig);
         console.log('✓ Connected to database');
 
-        // Check if table exists
         const [tables] = await connection.query("SHOW TABLES LIKE 'students'");
         
         if (tables.length === 0) {
@@ -49,7 +70,6 @@ async function initDatabase() {
         await connection.end();
     } catch (error) {
         console.error('❌ Database initialization error:', error.message);
-        // Don't fail the app startup if DB init fails
     }
 }
 

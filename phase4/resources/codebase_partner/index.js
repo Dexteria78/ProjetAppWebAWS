@@ -46,4 +46,5 @@ app.use(function (req, res, next) {
 const app_port = process.env.APP_PORT ||3000
 app.listen(app_port, () => {
     console.log(`Server is running on port ${app_port}.`);
+    initDatabase();
 });
